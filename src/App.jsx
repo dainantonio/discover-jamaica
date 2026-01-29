@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { 
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
-  Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award
+  Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
+  ExternalLink, LogOut
 } from 'lucide-react';
 
 /**
- * DATA MOCKUP
+ * MOCK DATA
  */
 const CATEGORIES = [
   { id: 'food', label: 'Eat & Drink', icon: '🍹' },
@@ -105,15 +106,25 @@ const App = () => {
             <h1 className="text-2xl font-bold text-slate-800">My Business</h1>
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">JB</div>
           </div>
+          
+          {/* LINK TO MARKETING STRATEGY */}
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <h3 className="text-orange-800 font-bold text-sm mb-1">Founding Member Status</h3>
+            <p className="text-orange-700 text-xs mb-3">You are verified as an early adopter.</p>
+            <button className="w-full bg-orange-500 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center">
+              <ExternalLink size={12} className="mr-2" /> Share Registration Link
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-teal-50 p-4 rounded-xl border border-teal-100">
-              <span className="text-xs text-teal-600 font-medium uppercase">Bookings</span>
-              <div className="text-2xl font-bold mt-1">142</div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <span className="text-xs text-slate-500 font-medium uppercase">Bookings</span>
+              <div className="text-2xl font-bold mt-1 text-slate-800">142</div>
               <div className="text-xs text-teal-600 flex items-center mt-1"><TrendingUp size={12} className="mr-1"/> +12%</div>
             </div>
-            <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-              <span className="text-xs text-orange-600 font-medium uppercase">Revenue</span>
-              <div className="text-2xl font-bold mt-1">$4,250</div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <span className="text-xs text-slate-500 font-medium uppercase">Revenue</span>
+              <div className="text-2xl font-bold mt-1 text-slate-800">$4,250</div>
             </div>
           </div>
         </header>
@@ -136,7 +147,7 @@ const App = () => {
             </div>
           </section>
 
-          <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+          <section className="bg-slate-800 rounded-2xl p-6 text-white relative overflow-hidden">
              <div className="relative z-10">
                <h3 className="font-bold text-lg mb-2">Recovery Status</h3>
                <p className="text-slate-300 text-sm mb-4">Update your status to attract "Impact Travelers".</p>
@@ -179,13 +190,24 @@ const App = () => {
         <div className="fixed inset-0 top-16 z-30 bg-black/90">
           <div className="relative w-full h-full overflow-hidden">
             <img src="https://images.unsplash.com/photo-1550418290-b8d86e8a8b1c?auto=format&fit=crop&q=80&w=800" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+            
+            <button 
+              onClick={() => setShowAR(false)} 
+              className="absolute top-4 right-4 z-50 bg-black/50 text-white p-2 rounded-full"
+            >
+              <X size={20} />
+            </button>
+
             <div className="absolute top-1/4 left-1/4 animate-bounce bg-white px-4 py-2 rounded-xl shadow-xl transform -translate-x-1/2">
               <div className="text-xs font-bold text-teal-600 uppercase tracking-wider">Historical Site</div>
               <div className="font-bold text-sm">Devon House</div>
               <div className="text-xs text-neutral-500">0.4 km away</div>
             </div>
-            <div className="absolute bottom-32 w-full text-center">
-              <p className="text-white text-sm font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-md">Point camera at landmarks</p>
+            
+            <div className="absolute bottom-32 w-full text-center px-6">
+              <p className="text-white text-sm font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-md">
+                Point camera at landmarks to unlock history
+              </p>
             </div>
           </div>
         </div>
@@ -236,6 +258,24 @@ const App = () => {
                   </div>
                 ))}
               </div>
+            </section>
+            
+            {/* Gamification Banner */}
+            <section className="bg-gradient-to-r from-teal-500 to-emerald-400 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+               <div className="relative z-10 flex items-center justify-between">
+                 <div>
+                   <h3 className="font-bold text-lg">Impact Passport</h3>
+                   <p className="text-sm opacity-90 mb-2">2 more verifications to unlock Level 2!</p>
+                   <div className="flex gap-1">
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className={`w-8 h-8 rounded-full border-2 border-white/40 flex items-center justify-center ${i <= 3 ? 'bg-white text-teal-600' : ''}`}>
+                          {i <= 3 && <Check size={16} strokeWidth={4} />}
+                        </div>
+                      ))}
+                   </div>
+                 </div>
+                 <Award size={48} className="text-white opacity-90" />
+               </div>
             </section>
           </>
         )}
@@ -289,7 +329,12 @@ const App = () => {
         <div className="flex justify-between items-center max-w-sm mx-auto">
           {['discover', 'map', 'itinerary', 'profile'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`flex flex-col items-center gap-1 p-2 ${activeTab === tab ? 'text-teal-600' : 'text-neutral-400'}`}>
-              <div className="w-6 h-6 bg-neutral-100 rounded-full" />
+              <div className="w-6 h-6 bg-neutral-100 rounded-full flex items-center justify-center">
+                 {tab === 'discover' && <Compass size={18} />}
+                 {tab === 'map' && <MapPin size={18} />}
+                 {tab === 'itinerary' && <Calendar size={18} />}
+                 {tab === 'profile' && <User size={18} />}
+              </div>
               <span className="text-[10px] font-bold capitalize">{tab}</span>
             </button>
           ))}
