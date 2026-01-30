@@ -4,7 +4,7 @@ import {
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
-  Locate, Save, ArrowRight, Briefcase
+  Locate, Save, ArrowRight, Briefcase, Printer, Car
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -17,6 +17,7 @@ import L from 'leaflet';
  */
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
+  { id: 'experience', label: 'Experiences', icon: '🎨' }, // NEW: The Micro-Tourism Category
   { id: 'food', label: 'Eat & Drink', icon: '🍹' },
   { id: 'adventure', label: 'Adventure', icon: '🧗' },
   { id: 'culture', label: 'Culture', icon: '🥁' },
@@ -24,6 +25,24 @@ const CATEGORIES = [
 ];
 
 const INITIAL_LISTINGS = [
+  {
+    id: 4, // NEW EXPERIENCE LISTING
+    name: "Auntie V's Basket Weaving",
+    category: 'experience',
+    rating: 5.0,
+    reviews: 18,
+    price: '$40',
+    location: "Treasure Beach, St. Elizabeth",
+    coordinates: [17.887, -77.771],
+    image: "https://images.unsplash.com/photo-1605218427360-36390f8584af?auto=format&fit=crop&q=80&w=800",
+    description: "Learn to weave traditional baskets with palm leaves under the mango tree.",
+    full_bio: "I've been weaving since I was a little girl. Come sit on my porch, drink some lemongrass tea, and learn the art of Jamaican basketry. You take home whatever you make! This class supports the local women's weaving circle.",
+    impact_score: 100,
+    scout_verified: "Community Elder",
+    amenities: ["2 Hours", "Materials Included", "Tea Served", "Family Friendly"],
+    impact_badge: true,
+    whatsapp: "18765559999"
+  },
   {
     id: 0,
     name: "P&T Island Tours",
@@ -172,6 +191,18 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
             />
           </div>
           <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Category</label>
+            <select 
+              value={formData.category}
+              onChange={e => setFormData({...formData, category: e.target.value})}
+              className="w-full p-3 border rounded-xl mt-1 bg-white"
+            >
+              {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="text-xs font-bold text-neutral-500 uppercase">Description</label>
             <textarea 
               value={formData.description} 
@@ -206,7 +237,7 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
 
   const handleBooking = () => {
     setBooked(true);
-    const message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking a tour/transfer.`;
+    const message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking.`;
     const url = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -298,11 +329,13 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
             </div>
 
             <div>
-               <h3 className="font-bold text-lg mb-3">Amenities</h3>
+               <h3 className="font-bold text-lg mb-3">
+                 {item.category === 'experience' ? 'Class Details' : 'Amenities'}
+               </h3>
                <div className="flex flex-wrap gap-2">
                  {item.amenities.map(tag => (
                    <span key={tag} className="px-3 py-1.5 bg-neutral-100 text-neutral-700 text-xs font-bold rounded-full flex items-center">
-                     <Check size={12} className="mr-1.5 text-green-600" />
+                     {item.category === 'experience' ? <Clock size={12} className="mr-1.5 text-orange-600"/> : <Check size={12} className="mr-1.5 text-green-600" />}
                      {tag}
                    </span>
                  ))}
@@ -485,7 +518,7 @@ const App = () => {
   // 2. BUSINESS OWNER VIEW
   if (mode === 'business') {
     // Assuming the user owns the first listing for demo purposes
-    const myListing = listings[0];
+    const myListing = listings[0]; // Currently P&T Island Tours
 
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 animate-in fade-in duration-300">
@@ -576,22 +609,36 @@ const App = () => {
           </section>
         </main>
 
-        {/* QR Code Modal */}
+        {/* QR Code / Driver Kit Modal */}
         {showQR && (
           <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setShowQR(false)}>
-             <div className="bg-white w-full max-w-sm rounded-3xl p-8 text-center relative animate-in zoom-in-50 duration-200" onClick={e => e.stopPropagation()}>
-                <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl border-4 border-white shadow-lg -mt-16">JB</div>
-                <h3 className="text-2xl font-bold mb-1">Scan to Verify</h3>
-                <p className="text-slate-500 text-sm mb-6">Show this to scouts or tourists.</p>
-                <div className="bg-slate-900 p-6 rounded-2xl mb-6 inline-block shadow-xl">
-                   <QrCode size={160} className="text-white" />
+             <div className="bg-white w-full max-w-sm rounded-3xl p-0 overflow-hidden relative animate-in zoom-in-50 duration-200" onClick={e => e.stopPropagation()}>
+                
+                {/* Print Preview Area */}
+                <div className="bg-slate-900 p-8 text-center text-white relative">
+                   <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl border-4 border-teal-500 shadow-lg">JA</div>
+                   <h3 className="text-2xl font-bold mb-1">SCAN ME</h3>
+                   <p className="text-slate-400 text-xs mb-6 uppercase tracking-widest">Verified Tour Driver</p>
+                   
+                   <div className="bg-white p-4 rounded-xl mb-2 inline-block">
+                      <QrCode size={140} className="text-black" />
+                   </div>
+                   <p className="text-xs text-slate-500">DiscoverJA.com/driver/123</p>
                 </div>
-                <button 
-                  onClick={() => setShowQR(false)}
-                  className="w-full py-3 bg-slate-100 text-slate-900 font-bold rounded-xl"
-                >
-                  Close
-                </button>
+
+                <div className="p-6 bg-slate-50 border-t border-slate-200">
+                   <h4 className="font-bold text-slate-800 mb-2 flex items-center"><Car size={16} className="mr-2"/> Driver Kit</h4>
+                   <p className="text-xs text-slate-500 mb-4">Print this and stick it to your passenger window or headrest.</p>
+                   
+                   <div className="grid grid-cols-2 gap-3">
+                     <button className="py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-100">
+                       <Printer size={16} className="mr-2" /> Print PDF
+                     </button>
+                     <button onClick={() => setShowQR(false)} className="py-3 bg-black text-white rounded-xl text-xs font-bold">
+                       Done
+                     </button>
+                   </div>
+                </div>
              </div>
           </div>
         )}
