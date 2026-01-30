@@ -295,7 +295,7 @@ const App = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+          <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
              <div className="relative z-10">
                <h3 className="font-bold text-lg mb-2">Recovery Badge</h3>
                <p className="text-slate-300 text-sm mb-4">You are verified as a Founding Member.</p>
