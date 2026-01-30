@@ -1,30 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
-  Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation
+  Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
+  Locate, Save
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
 /**
- * MOCK DATABASE
+ * INITIAL DATA
  */
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
@@ -34,7 +23,7 @@ const CATEGORIES = [
   { id: 'stay', label: 'Stays', icon: '🏡' },
 ];
 
-const LISTINGS = [
+const INITIAL_LISTINGS = [
   {
     id: 0,
     name: "P&T Island Tours",
@@ -109,18 +98,29 @@ const LISTINGS = [
   }
 ];
 
-const MOCK_REVIEWS = [
-  { id: 1, user: "Sarah J.", text: "The view was insane! And knowing my money helps the school next door made it even better.", rating: 5, date: "2 days ago" },
-  { id: 2, user: "Mike T.", text: "Authentic vibes. The owner is super friendly.", rating: 4, date: "1 week ago" },
-  { id: 3, user: "Jessica R.", text: "A bit of a drive, but worth it for the jerk chicken.", rating: 5, date: "3 weeks ago" }
-];
-
 const STAMPS = [
   { id: 1, name: "Rebuild Hero", icon: "🏗️", date: "Oct 24", earned: true },
   { id: 2, name: "Foodie", icon: "🍗", date: "Oct 25", earned: true },
   { id: 3, name: "Explorer", icon: "🗺️", date: null, earned: false },
   { id: 4, name: "Volunteer", icon: "❤️", date: null, earned: false },
 ];
+
+const MOCK_REVIEWS = [
+  { id: 1, user: "Sarah J.", text: "The view was insane! And knowing my money helps the school next door made it even better.", rating: 5, date: "2 days ago" },
+  { id: 2, user: "Mike T.", text: "Authentic vibes. The owner is super friendly.", rating: 4, date: "1 week ago" },
+];
+
+// --- HELPER: CREATE EMOJI ICONS ---
+const createEmojiIcon = (category) => {
+  const cat = CATEGORIES.find(c => c.id === category) || CATEGORIES[0];
+  return L.divIcon({
+    className: 'custom-icon',
+    html: `<div class="w-10 h-10 bg-white rounded-full shadow-lg border-2 border-white flex items-center justify-center text-xl transform hover:scale-110 transition-transform">${cat.icon}</div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
+};
 
 // --- SUB-COMPONENTS ---
 
@@ -131,39 +131,81 @@ const ViewToggle = ({ mode, setMode }) => (
   </div>
 );
 
-const Onboarding = ({ onComplete }) => (
-  <div className="fixed inset-0 z-[5000] bg-teal-600 text-white flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
-    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-8 backdrop-blur-lg">
-      <Compass size={48} className="text-white" />
-    </div>
-    <h1 className="text-3xl font-bold mb-4 text-center">Welcome to DiscoverJA</h1>
-    <p className="text-center text-teal-100 mb-12 max-w-xs leading-relaxed">
-      The first travel app that helps you explore Jamaica while rebuilding local communities.
-    </p>
-    <div className="space-y-4 w-full max-w-xs">
-      <div className="flex items-center space-x-4 bg-white/10 p-4 rounded-xl">
-         <ShieldCheck className="shrink-0" />
-         <div className="text-sm">
-            <span className="font-bold block">Verified Open</span>
-            <span className="opacity-80">Real-time updates from scouts.</span>
-         </div>
-      </div>
-      <div className="flex items-center space-x-4 bg-white/10 p-4 rounded-xl">
-         <Heart className="shrink-0" />
-         <div className="text-sm">
-            <span className="font-bold block">Impact Tourism</span>
-            <span className="opacity-80">Support local recovery efforts.</span>
-         </div>
-      </div>
-    </div>
+// Map Component to Handle "Locate Me"
+const LocationMarker = () => {
+  const map = useMap();
+  
+  const handleLocate = () => {
+    map.locate().on("locationfound", function (e) {
+      map.flyTo(e.latlng, 13);
+      L.marker(e.latlng, {
+        icon: L.divIcon({
+          className: 'user-loc',
+          html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md ring-4 ring-blue-500/30"></div>'
+        })
+      }).addTo(map);
+    });
+  };
+
+  return (
     <button 
-      onClick={onComplete}
-      className="mt-12 w-full max-w-xs bg-white text-teal-700 py-4 rounded-xl font-bold text-lg shadow-xl active:scale-95 transition-transform"
+      onClick={handleLocate}
+      className="absolute bottom-20 right-4 z-[1000] bg-white p-3 rounded-full shadow-xl text-neutral-700 hover:text-blue-600"
     >
-      Get Started
+      <Locate size={24} />
     </button>
-  </div>
-);
+  );
+};
+
+const EditListingModal = ({ listing, onClose, onSave }) => {
+  const [formData, setFormData] = useState({ ...listing });
+
+  return (
+    <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 h-[85vh] sm:h-auto overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Edit Listing</h2>
+          <button onClick={onClose} className="p-2 bg-neutral-100 rounded-full"><X size={20}/></button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Business Name</label>
+            <input 
+              type="text" 
+              value={formData.name} 
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="w-full p-3 border rounded-xl mt-1 font-bold"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Description</label>
+            <textarea 
+              value={formData.description} 
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              className="w-full p-3 border rounded-xl mt-1 text-sm h-24"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">WhatsApp Number</label>
+            <input 
+              type="text" 
+              value={formData.whatsapp} 
+              onChange={e => setFormData({...formData, whatsapp: e.target.value})}
+              className="w-full p-3 border rounded-xl mt-1 font-mono text-sm"
+            />
+          </div>
+          <button 
+            onClick={() => onSave(formData)}
+            className="w-full bg-black text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4"
+          >
+            <Save size={18} /> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -327,17 +369,21 @@ const App = () => {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [mode, setMode] = useState('traveler');
   const [activeTab, setActiveTab] = useState('discover');
+  
+  // DATA STATE - NOW EDITABLE
+  const [listings, setListings] = useState(INITIAL_LISTINGS);
   const [selectedListing, setSelectedListing] = useState(null);
   
-  // Data State
-  const [savedIds, setSavedIds] = useState([]); // Now stores favorites
+  // User State
+  const [savedIds, setSavedIds] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Business State
+  // Business Owner State
   const [isBusinessOpen, setIsBusinessOpen] = useState(true);
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Toggle Favorites
   const toggleSave = (id) => {
@@ -349,7 +395,7 @@ const App = () => {
   };
 
   // Filter Logic
-  const filteredListings = LISTINGS.filter(item => {
+  const filteredListings = listings.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const query = searchQuery.toLowerCase();
     const matchesSearch = item.name.toLowerCase().includes(query) || 
@@ -360,14 +406,40 @@ const App = () => {
   });
 
   // Get Saved Listings for Profile
-  const savedListingsData = LISTINGS.filter(item => savedIds.includes(item.id));
+  const savedListingsData = listings.filter(item => savedIds.includes(item.id));
+
+  // Handle Edit Save
+  const handleEditSave = (updatedListing) => {
+    const updatedListings = listings.map(l => l.id === updatedListing.id ? updatedListing : l);
+    setListings(updatedListings);
+    setShowEditModal(false);
+  };
 
   if (showOnboarding) {
-    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+    return (
+      <div className="fixed inset-0 z-[5000] bg-teal-600 text-white flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
+        <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-8 backdrop-blur-lg">
+          <Compass size={48} className="text-white" />
+        </div>
+        <h1 className="text-3xl font-bold mb-4 text-center">Welcome to DiscoverJA</h1>
+        <p className="text-center text-teal-100 mb-12 max-w-xs leading-relaxed">
+          The first travel app that helps you explore Jamaica while rebuilding local communities.
+        </p>
+        <button 
+          onClick={() => setShowOnboarding(false)}
+          className="mt-12 w-full max-w-xs bg-white text-teal-700 py-4 rounded-xl font-bold text-lg shadow-xl active:scale-95 transition-transform"
+        >
+          Get Started
+        </button>
+      </div>
+    );
   }
 
   // -- BUSINESS OWNER VIEW --
   if (mode === 'business') {
+    // Assuming the user owns the first listing for demo purposes
+    const myListing = listings[0];
+
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
         <ViewToggle mode={mode} setMode={setMode} />
@@ -398,6 +470,17 @@ const App = () => {
         </header>
 
         <main className="p-6 space-y-6">
+          
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+             <div className="w-16 h-16 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
+               <img src={myListing.image} className="w-full h-full object-cover" />
+             </div>
+             <div>
+               <h3 className="font-bold">{myListing.name}</h3>
+               <p className="text-xs text-slate-500 line-clamp-2">{myListing.description}</p>
+             </div>
+          </div>
+
           {/* Quick Actions Grid */}
           <div>
             <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
@@ -409,7 +492,10 @@ const App = () => {
                 <QrCode className="text-orange-500" size={28} />
                 <span className="text-sm font-bold">Show QR Code</span>
               </button>
-              <button className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95">
+              <button 
+                onClick={() => setShowEditModal(true)}
+                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
+              >
                 <Edit3 className="text-blue-500" size={28} />
                 <span className="text-sm font-bold">Edit Listing</span>
               </button>
@@ -459,6 +545,15 @@ const App = () => {
                 </button>
              </div>
           </div>
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && (
+          <EditListingModal 
+            listing={myListing} 
+            onClose={() => setShowEditModal(false)} 
+            onSave={handleEditSave} 
+          />
         )}
       </div>
     );
@@ -599,8 +694,15 @@ const App = () => {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                
+                <LocationMarker />
+
                 {filteredListings.map(item => (
-                   <Marker key={item.id} position={item.coordinates}>
+                   <Marker 
+                     key={item.id} 
+                     position={item.coordinates}
+                     icon={createEmojiIcon(item.category)}
+                   >
                       <Popup>
                          <div className="p-1 text-center">
                             <h3 className="font-bold text-sm mb-1">{item.name}</h3>
