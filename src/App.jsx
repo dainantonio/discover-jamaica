@@ -5,6 +5,24 @@ import {
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe
 } from 'lucide-react';
 
+// --- MAP IMPORTS ---
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default Leaflet marker icons in React
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
 /**
  * MOCK DATABASE
  */
@@ -17,13 +35,15 @@ const LISTINGS = [
     reviews: 1240,
     price: '$$',
     location: "Ocho Rios, St. Ann",
+    coordinates: [18.405, -77.103], // Real coords
     image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
     description: "Zipline through the canopy and bobsled down the mountain.",
     full_bio: "Experience the rainforest from 700 feet up. Following Hurricane Melissa, we have replanted 500 trees and restored the bobsled track to be faster than ever.",
     impact_score: 95,
     scout_verified: "Sarah J.",
     amenities: ["Wifi", "Parking", "Food", "Guide"],
-    impact_badge: true
+    impact_badge: true,
+    whatsapp: "18765550001"
   },
   {
     id: 2,
@@ -33,13 +53,15 @@ const LISTINGS = [
     reviews: 3500,
     price: '$',
     location: "Montego Bay, St. James",
+    coordinates: [18.504, -77.896],
     image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=800",
     description: "The authentic jerk experience. Wood fire smoked chicken and pork.",
     full_bio: "We are the heart of MoBay. Our pits are hot and our roof is fixed. We source all our peppers from local farmers affected by the storm.",
     impact_score: 88,
     scout_verified: "Devon B.",
     amenities: ["Outdoor Seating", "Takeout", "Bar"],
-    impact_badge: false
+    impact_badge: false,
+    whatsapp: "18765550002"
   },
   {
     id: 3,
@@ -49,20 +71,22 @@ const LISTINGS = [
     reviews: 2100,
     price: '$$$',
     location: "Kingston 6",
+    coordinates: [18.019, -76.783],
     image: "https://images.unsplash.com/photo-1550418290-b8d86e8a8b1c?auto=format&fit=crop&q=80&w=800",
     description: "The former home and studio of the reggae legend.",
     full_bio: "Walk through the life of a legend. We are fully open and accepting visitors. Proceeds help the Tuff Gong Foundation repair local schools.",
     impact_score: 98,
     scout_verified: "Rita M.",
     amenities: ["Gift Shop", "Tour Guide", "Café"],
-    impact_badge: true
+    impact_badge: true,
+    whatsapp: "18765550003"
   }
 ];
 
 // --- SUB-COMPONENTS ---
 
 const ViewToggle = ({ mode, setMode }) => (
-  <div className="fixed top-20 right-4 z-50 bg-white/90 backdrop-blur rounded-full p-1 border border-neutral-200 shadow-lg flex">
+  <div className="fixed top-20 right-4 z-[1000] bg-white/90 backdrop-blur rounded-full p-1 border border-neutral-200 shadow-lg flex">
     <button onClick={() => setMode('traveler')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'traveler' ? 'bg-teal-600 text-white shadow-md' : 'text-neutral-500'}`}>Traveler</button>
     <button onClick={() => setMode('business')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'business' ? 'bg-orange-500 text-white shadow-md' : 'text-neutral-500'}`}>Owner</button>
   </div>
@@ -71,12 +95,23 @@ const ViewToggle = ({ mode, setMode }) => (
 const DetailView = ({ item, onBack }) => {
   const [booked, setBooked] = useState(false);
 
+  const handleBooking = () => {
+    setBooked(true);
+    // SIMULATE WHATSAPP OPENING
+    const message = `Hi ${item.name}, I saw you on DiscoverJA! I would like to make a reservation.`;
+    const url = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(message)}`;
+    
+    // In a real app, we would open this:
+    // window.open(url, '_blank');
+    console.log("Opening WhatsApp:", url);
+  };
+
   return (
-    <div className="bg-white min-h-screen pb-24 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="bg-white min-h-screen pb-24 animate-in slide-in-from-bottom-4 duration-300 relative z-[2000]">
       {/* Hero Image */}
       <div className="relative h-72 w-full">
         <img src={item.image} className="w-full h-full object-cover" />
-        <button onClick={onBack} className="absolute top-4 left-4 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-colors">
+        <button onClick={onBack} className="absolute top-4 left-4 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-colors z-10">
           <ArrowLeft size={24} />
         </button>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-24 text-white">
@@ -125,19 +160,21 @@ const DetailView = ({ item, onBack }) => {
         {/* Action Button */}
         <div className="pt-4">
            {booked ? (
-             <div className="bg-green-100 text-green-800 p-4 rounded-xl text-center font-bold flex flex-col items-center">
+             <div className="bg-green-100 text-green-800 p-4 rounded-xl text-center font-bold flex flex-col items-center border border-green-200">
                 <Check size={32} className="mb-2" />
-                Reservation Request Sent!
-                <span className="text-xs font-normal opacity-80 mt-1">The owner will confirm via WhatsApp.</span>
+                WhatsApp Opened!
+                <span className="text-xs font-normal opacity-80 mt-1">Check your other tab to chat with the owner.</span>
              </div>
            ) : (
              <button 
-               onClick={() => setBooked(true)}
-               className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center"
+               onClick={handleBooking}
+               className="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center"
              >
-               Book Now • {item.price}
+               <Phone size={20} className="mr-2" />
+               Book via WhatsApp
              </button>
            )}
+           <p className="text-center text-xs text-neutral-400 mt-3">No booking fees. 100% goes to the owner.</p>
         </div>
       </div>
     </div>
@@ -188,7 +225,6 @@ const App = () => {
 
   // -- TRAVELER VIEW --
   
-  // If a listing is selected, show the Detail View
   if (selectedListing) {
     return (
       <>
@@ -203,7 +239,7 @@ const App = () => {
       <ViewToggle mode={mode} setMode={setMode} />
       
       {/* Top Bar */}
-      <header className="sticky top-0 bg-white/95 backdrop-blur-md z-40 px-4 py-3 flex items-center justify-between border-b border-neutral-100 shadow-sm">
+      <header className="sticky top-0 bg-white/95 backdrop-blur-md z-[900] px-4 py-3 flex items-center justify-between border-b border-neutral-100 shadow-sm">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">J</div>
           <span className="font-bold text-lg tracking-tight">Discover<span className="text-teal-600">JA</span></span>
@@ -229,7 +265,6 @@ const App = () => {
                 <h2 className="text-xl font-bold text-neutral-800">Support Recovery ❤️</h2>
               </div>
               
-              {/* VERTICAL SCROLL LIST FOR BETTER UX */}
               <div className="space-y-4">
                 {LISTINGS.map(item => (
                   <div 
@@ -264,16 +299,38 @@ const App = () => {
           </>
         )}
 
+        {/* --- MAP VIEW --- */}
         {activeTab === 'map' && (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-             <div className="bg-teal-50 p-4 rounded-full mb-4"><MapPin size={32} className="text-teal-600" /></div>
-             <h3 className="font-bold text-lg">Map View</h3>
-             <p className="text-neutral-500 text-sm max-w-xs">We are integrating Leaflet Maps to show you verified safe routes. Coming in the next update.</p>
+          <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
+             <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {LISTINGS.map(item => (
+                   <Marker key={item.id} position={item.coordinates}>
+                      <Popup>
+                         <div className="p-1 text-center">
+                            <h3 className="font-bold text-sm mb-1">{item.name}</h3>
+                            <button 
+                              onClick={() => setSelectedListing(item)}
+                              className="text-xs bg-teal-600 text-white px-2 py-1 rounded"
+                            >
+                              View
+                            </button>
+                         </div>
+                      </Popup>
+                   </Marker>
+                ))}
+             </MapContainer>
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-lg z-[1000]">
+                Showing {LISTINGS.length} Verified Locations
+             </div>
           </div>
         )}
       </main>
 
-      <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-40">
+      <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-[1000]">
         <div className="flex justify-between items-center max-w-sm mx-auto">
           {['discover', 'map', 'profile'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`flex flex-col items-center gap-1 p-2 ${activeTab === tab ? 'text-teal-600' : 'text-neutral-400'}`}>
