@@ -4,7 +4,7 @@ import {
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
-  Locate, Save
+  Locate, Save, ArrowRight, Briefcase
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -124,13 +124,6 @@ const createEmojiIcon = (category) => {
 
 // --- SUB-COMPONENTS ---
 
-const ViewToggle = ({ mode, setMode }) => (
-  <div className="fixed top-20 right-4 z-[1000] bg-white/90 backdrop-blur rounded-full p-1 border border-neutral-200 shadow-lg flex">
-    <button onClick={() => setMode('traveler')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'traveler' ? 'bg-teal-600 text-white shadow-md' : 'text-neutral-500'}`}>Traveler</button>
-    <button onClick={() => setMode('business')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'business' ? 'bg-orange-500 text-white shadow-md' : 'text-neutral-500'}`}>Owner</button>
-  </div>
-);
-
 // Map Component to Handle "Locate Me"
 const LocationMarker = () => {
   const map = useMap();
@@ -150,7 +143,7 @@ const LocationMarker = () => {
   return (
     <button 
       onClick={handleLocate}
-      className="absolute bottom-20 right-4 z-[1000] bg-white p-3 rounded-full shadow-xl text-neutral-700 hover:text-blue-600"
+      className="absolute bottom-20 right-4 z-[1000] bg-white p-3 rounded-full shadow-xl text-neutral-700 hover:text-blue-600 active:scale-90 transition-transform"
     >
       <Locate size={24} />
     </button>
@@ -363,11 +356,65 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
   );
 };
 
+// --- NEW COMPONENT: LANDING / GATEWAY ---
+const LandingPage = ({ onSelectRole }) => {
+  return (
+    <div className="fixed inset-0 z-[5000] bg-teal-700 text-white flex flex-col animate-in fade-in duration-500">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-lg border border-white/20 shadow-2xl rotate-3">
+            <Compass size={40} className="text-white" />
+          </div>
+          <h1 className="text-4xl font-bold mb-2 tracking-tight">Discover<span className="text-teal-200">JA</span></h1>
+          <p className="text-teal-100/80 mb-12 max-w-xs text-sm font-medium">
+            Explore authentic Jamaica while helping our communities rebuild and thrive.
+          </p>
+
+          <div className="w-full max-w-xs space-y-4">
+            <button 
+              onClick={() => onSelectRole('traveler')}
+              className="w-full bg-white text-teal-900 p-4 rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 rounded-full"><Compass size={20} className="text-teal-700"/></div>
+                <span>I'm a Traveler</span>
+              </div>
+              <ArrowRight size={20} className="text-teal-300 group-hover:text-teal-700 transition-colors" />
+            </button>
+
+            <button 
+              onClick={() => onSelectRole('business')}
+              className="w-full bg-teal-800/50 border border-teal-600/50 text-white p-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-between hover:bg-teal-800"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-900 rounded-full"><Briefcase size={20} className="text-teal-200"/></div>
+                <span>I Own a Business</span>
+              </div>
+              <ArrowRight size={20} className="text-teal-500" />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-6 text-center">
+        <p className="text-[10px] text-teal-300/60 uppercase tracking-widest font-bold">Made with ❤️ for Jamaica</p>
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN COMPONENT ---
 
 const App = () => {
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  const [mode, setMode] = useState('traveler');
+  // APP STATE
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [mode, setMode] = useState('traveler'); // 'traveler' or 'business'
+  
+  // NAVIGATION STATE
   const [activeTab, setActiveTab] = useState('discover');
   
   // DATA STATE - NOW EDITABLE
@@ -384,6 +431,19 @@ const App = () => {
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // --- HANDLERS ---
+
+  const handleRoleSelection = (selectedRole) => {
+    setMode(selectedRole);
+    setIsAuthenticated(true);
+  };
+
+  const handleSignOut = () => {
+    setIsAuthenticated(false);
+    setMode('traveler');
+    setActiveTab('discover');
+  };
 
   // Toggle Favorites
   const toggleSave = (id) => {
@@ -415,40 +475,29 @@ const App = () => {
     setShowEditModal(false);
   };
 
-  if (showOnboarding) {
-    return (
-      <div className="fixed inset-0 z-[5000] bg-teal-600 text-white flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
-        <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-8 backdrop-blur-lg">
-          <Compass size={48} className="text-white" />
-        </div>
-        <h1 className="text-3xl font-bold mb-4 text-center">Welcome to DiscoverJA</h1>
-        <p className="text-center text-teal-100 mb-12 max-w-xs leading-relaxed">
-          The first travel app that helps you explore Jamaica while rebuilding local communities.
-        </p>
-        <button 
-          onClick={() => setShowOnboarding(false)}
-          className="mt-12 w-full max-w-xs bg-white text-teal-700 py-4 rounded-xl font-bold text-lg shadow-xl active:scale-95 transition-transform"
-        >
-          Get Started
-        </button>
-      </div>
-    );
+  // --- RENDER ---
+
+  // 1. SHOW LANDING PAGE IF NOT AUTHENTICATED
+  if (!isAuthenticated) {
+    return <LandingPage onSelectRole={handleRoleSelection} />;
   }
 
-  // -- BUSINESS OWNER VIEW --
+  // 2. BUSINESS OWNER VIEW
   if (mode === 'business') {
     // Assuming the user owns the first listing for demo purposes
     const myListing = listings[0];
 
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
-        <ViewToggle mode={mode} setMode={setMode} />
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 animate-in fade-in duration-300">
         
         {/* Header */}
         <header className="bg-white px-6 pt-6 pb-8 border-b border-slate-200 rounded-b-3xl shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-slate-800">Command Center</h1>
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border-2 border-orange-50">JB</div>
+            <div className="flex items-center gap-3">
+               <button onClick={handleSignOut} className="text-xs font-bold text-slate-400 hover:text-red-500">Sign Out</button>
+               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border-2 border-orange-50">JB</div>
+            </div>
           </div>
 
           {/* Live Status Toggle */}
@@ -559,25 +608,21 @@ const App = () => {
     );
   }
 
-  // -- TRAVELER VIEW --
+  // 3. TRAVELER VIEW
   
   if (selectedListing) {
     return (
-      <>
-        <ViewToggle mode={mode} setMode={setMode} />
-        <DetailView 
-          item={selectedListing} 
-          onBack={() => setSelectedListing(null)} 
-          isSaved={savedIds.includes(selectedListing.id)}
-          onToggleSave={toggleSave}
-        />
-      </>
+      <DetailView 
+        item={selectedListing} 
+        onBack={() => setSelectedListing(null)} 
+        isSaved={savedIds.includes(selectedListing.id)}
+        onToggleSave={toggleSave}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 pb-24">
-      <ViewToggle mode={mode} setMode={setMode} />
+    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 pb-24 animate-in fade-in duration-300">
       
       {/* Top Bar */}
       <header className="sticky top-0 bg-white/95 backdrop-blur-md z-[900] px-4 py-3 flex items-center justify-between border-b border-neutral-100 shadow-sm">
@@ -689,6 +734,7 @@ const App = () => {
         {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
+             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -799,7 +845,7 @@ const App = () => {
                )}
              </div>
              
-             <button className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
+             <button onClick={handleSignOut} className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
                <LogOut size={16} className="mr-2" /> Sign Out
              </button>
           </div>
