@@ -6,7 +6,7 @@ import {
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
   CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
-  Map as MapIcon, Sun, DollarSign, Plane
+  Map as MapIcon, Sun, DollarSign, Plane, Ticket
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -15,7 +15,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 /**
- * INITIAL DATA
+ * INITIAL DATA (Expanded Coverage)
  */
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
@@ -50,9 +50,9 @@ const STORIES = [
 ];
 
 const REWARDS = [
-  { id: 1, title: "Free Blue Mountain Coffee", cost: 2, icon: "☕", desc: "Redeem at any partner café." },
-  { id: 2, title: "10% Off Eco-Tours", cost: 4, icon: "🌿", desc: "Valid for hiking and rafting." },
-  { id: 3, title: "Donate $10 to Recovery", cost: 5, icon: "❤️", desc: "We donate on your behalf." },
+  { id: 1, title: "Free Blue Mountain Coffee", cost: 200, icon: "☕", desc: "Redeem at any partner café." },
+  { id: 2, title: "10% Off Eco-Tours", cost: 400, icon: "🌿", desc: "Valid for hiking and rafting." },
+  { id: 3, title: "Donate $10 to Recovery", cost: 500, icon: "❤️", desc: "We donate on your behalf." },
 ];
 
 const INITIAL_LISTINGS = [
@@ -73,7 +73,8 @@ const INITIAL_LISTINGS = [
     scout_verified: "Community Elder",
     amenities: ["2 Hours", "Materials Included", "Tea Served", "Family Friendly"],
     impact_badge: true,
-    whatsapp: "18765559999"
+    whatsapp: "18765559999",
+    special_offer: null
   },
   {
     id: 0,
@@ -92,7 +93,8 @@ const INITIAL_LISTINGS = [
     scout_verified: "Direct Partner",
     amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified"],
     impact_badge: true,
-    whatsapp: "18764859759"
+    whatsapp: "18764859759",
+    special_offer: "Free Red Stripe on arrival"
   },
   {
     id: 5,
@@ -111,7 +113,8 @@ const INITIAL_LISTINGS = [
     scout_verified: "Sarah J.",
     amenities: ["Business Class", "Wifi in Car", "Receipts Available"],
     impact_badge: false,
-    whatsapp: "18765551234"
+    whatsapp: "18765551234",
+    special_offer: null
   },
   {
     id: 1,
@@ -130,7 +133,8 @@ const INITIAL_LISTINGS = [
     scout_verified: "Sarah J.",
     amenities: ["Wifi", "Parking", "Food", "Guide"],
     impact_badge: true,
-    whatsapp: "18765550001"
+    whatsapp: "18765550001",
+    special_offer: "10% off groups of 4+"
   },
   {
     id: 2,
@@ -149,7 +153,8 @@ const INITIAL_LISTINGS = [
     scout_verified: "Devon B.",
     amenities: ["Outdoor Seating", "Takeout", "Bar"],
     impact_badge: false,
-    whatsapp: "18765550002"
+    whatsapp: "18765550002",
+    special_offer: null
   },
   {
     id: 3,
@@ -168,7 +173,48 @@ const INITIAL_LISTINGS = [
     scout_verified: "Rita M.",
     amenities: ["Gift Shop", "Tour Guide", "Café"],
     impact_badge: true,
-    whatsapp: "18765550003"
+    whatsapp: "18765550003",
+    special_offer: null
+  },
+  {
+    id: 6,
+    name: "Rick's Cafe",
+    category: 'food',
+    region: 'negril',
+    rating: 4.6,
+    reviews: 5400,
+    price: '$$',
+    location: "West End, Negril",
+    coordinates: [18.250, -78.366],
+    image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
+    description: "World famous sunset bar and cliff diving.",
+    full_bio: "The best sunset view in the world. Come for the diving, stay for the vibes. We are fully operational after the storm.",
+    impact_score: 85,
+    scout_verified: "Mike T.",
+    amenities: ["Live Music", "Cliff Diving", "Pool", "Bar"],
+    impact_badge: false,
+    whatsapp: "18765550006",
+    special_offer: null
+  },
+  {
+    id: 7,
+    name: "Blue Lagoon Tours",
+    category: 'adventure',
+    region: 'portantonio',
+    rating: 4.8,
+    reviews: 890,
+    price: '$$',
+    location: "Port Antonio, Portland",
+    coordinates: [18.170, -76.388],
+    image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
+    description: "Swim in the mix of fresh and saltwater in the mystical lagoon.",
+    full_bio: "A natural wonder. We offer guided raft tours and snorkeling. The surrounding jungle is lush and recovering beautifully.",
+    impact_score: 96,
+    scout_verified: "Jason L.",
+    amenities: ["Rafting", "Swimming", "Guide"],
+    impact_badge: true,
+    whatsapp: "18765550007",
+    special_offer: null
   }
 ];
 
@@ -413,7 +459,8 @@ const CreateListingModal = ({ onClose, onSave }) => {
       amenities: formData.amenities.split(',').map(s => s.trim()),
       impact_score: 100,
       impact_badge: true,
-      scout_verified: "Pending"
+      scout_verified: "Pending",
+      region: "montegobay" // Default for now
     };
     onSave(newListing);
   };
@@ -518,12 +565,13 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-neutral-500 uppercase">WhatsApp Number</label>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Special Offer</label>
             <input 
               type="text" 
-              value={formData.whatsapp} 
-              onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-              className="w-full p-3 border rounded-xl mt-1 font-mono text-sm"
+              placeholder="e.g. Free Drink with Entry"
+              value={formData.special_offer || ''} 
+              onChange={e => setFormData({...formData, special_offer: e.target.value})}
+              className="w-full p-3 border border-orange-200 bg-orange-50 rounded-xl mt-1 text-sm font-medium text-orange-900"
             />
           </div>
           <button 
@@ -538,10 +586,11 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
   );
 };
 
-const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
+const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
   const [activeTab, setActiveTab] = useState('about');
   const [booked, setBooked] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [checkedIn, setCheckedIn] = useState(false);
 
   const handleBooking = () => {
     setBooked(true);
@@ -568,6 +617,13 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
       }
     } else {
       alert("Link copied to clipboard!");
+    }
+  };
+
+  const handleCheckInClick = () => {
+    if (!checkedIn) {
+      setCheckedIn(true);
+      onCheckIn(item.id);
     }
   };
 
@@ -609,6 +665,20 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
       </div>
 
       <div className="p-6">
+        
+        {/* CHECK-IN BUTTON */}
+        <button 
+          onClick={handleCheckInClick}
+          disabled={checkedIn}
+          className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 mb-6 shadow-md transition-all ${checkedIn ? 'bg-green-100 text-green-700' : 'bg-teal-600 text-white active:scale-95'}`}
+        >
+          {checkedIn ? (
+            <> <Check size={20} /> Checked In (+10 pts) </>
+          ) : (
+            <> <MapPin size={20} /> Check In Here </>
+          )}
+        </button>
+
         {/* Verification Badge */}
         <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex flex-col items-center text-center space-y-2 mb-6">
           <ShieldCheck className="text-teal-600" size={32} />
@@ -794,23 +864,39 @@ const App = () => {
   // NAVIGATION STATE
   const [activeTab, setActiveTab] = useState('discover');
   
-  // DATA STATE - NOW EDITABLE
-  const [listings, setListings] = useState(INITIAL_LISTINGS);
+  // DATA STATE - NOW WITH LOCAL STORAGE PERSISTENCE
+  const [listings, setListings] = useState(() => {
+    const saved = localStorage.getItem('discoverja_listings');
+    return saved ? JSON.parse(saved) : INITIAL_LISTINGS;
+  });
+
+  const [savedIds, setSavedIds] = useState(() => {
+    const saved = localStorage.getItem('discoverja_saved');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [points, setPoints] = useState(() => {
+    const saved = localStorage.getItem('discoverja_points');
+    return saved ? parseInt(saved) : 150;
+  });
+
+  // PERSISTENCE EFFECTS
+  useEffect(() => { localStorage.setItem('discoverja_listings', JSON.stringify(listings)); }, [listings]);
+  useEffect(() => { localStorage.setItem('discoverja_saved', JSON.stringify(savedIds)); }, [savedIds]);
+  useEffect(() => { localStorage.setItem('discoverja_points', points.toString()); }, [points]);
+
   const [selectedListing, setSelectedListing] = useState(null);
   
   // User State
-  const [savedIds, setSavedIds] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [activeRegion, setActiveRegion] = useState('all'); // NEW: Region Filter
-  const [points, setPoints] = useState(150); // MOCK POINTS
+  const [activeRegion, setActiveRegion] = useState('all'); // Region Filter
 
   // Business Owner State
   const [isBusinessOpen, setIsBusinessOpen] = useState(true);
-  const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false); // NEW: Create Listing Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // --- HANDLERS ---
 
@@ -835,18 +921,23 @@ const App = () => {
   };
 
   const redeemReward = (cost) => {
-    if (points >= cost * 10) { // Assuming 1 stamp = 10 points for display
-      setPoints(points - (cost * 10));
+    if (points >= cost) {
+      setPoints(points - cost);
       alert("Reward Redeemed! Show this to the cashier.");
     } else {
       alert("Not enough points! Visit more places to earn stamps.");
     }
   };
 
+  const handleCheckIn = (id) => {
+    setPoints(points + 10);
+    alert("Check-in confirmed! You earned 10 Points.");
+  };
+
   // Filter Logic
   const filteredListings = listings.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    const matchesRegion = activeRegion === 'all' || (item.region && item.region === activeRegion); // Region Check
+    const matchesRegion = activeRegion === 'all' || (item.region && item.region === activeRegion);
     
     const query = searchQuery.toLowerCase();
     const matchesSearch = item.name.toLowerCase().includes(query) || 
@@ -867,7 +958,7 @@ const App = () => {
     setShowEditModal(false);
   };
 
-  // NEW: Handle Create Listing
+  // Handle Create Listing
   const handleCreateSave = (newListing) => {
     setListings([...listings, newListing]);
     setShowCreateModal(false);
@@ -876,7 +967,6 @@ const App = () => {
 
   // --- RENDER ---
 
-  // 1. SHOW LANDING PAGE IF NOT AUTHENTICATED
   if (!isAuthenticated) {
     return <LandingPage onSelectRole={handleRoleSelection} />;
   }
@@ -935,7 +1025,7 @@ const App = () => {
                 <span className="text-sm font-bold">Show QR Code</span>
               </button>
               <button 
-                onClick={() => setShowCreateModal(true)} // NEW: Create Listing Button
+                onClick={() => setShowCreateModal(true)} 
                 className="p-4 bg-orange-600 text-white rounded-2xl border border-orange-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-orange-700 hover:shadow-md transition-all active:scale-95"
               >
                 <PlusCircle className="text-white" size={28} />
@@ -947,15 +1037,16 @@ const App = () => {
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
              <div className="flex justify-between items-start mb-3">
                <h3 className="font-bold text-slate-800 flex items-center"><Bell size={16} className="mr-2 text-orange-500"/> Today's Flash Offer</h3>
-               <span className="text-xs text-slate-400">Visible to 200+ users</span>
+               <button 
+                 onClick={() => setShowEditModal(true)}
+                 className="text-xs text-teal-600 font-bold underline"
+               >
+                 Edit
+               </button>
              </div>
-             <textarea 
-               value={specialOffer}
-               onChange={(e) => setSpecialOffer(e.target.value)}
-               className="w-full bg-slate-50 rounded-xl p-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2"
-               rows={2}
-             />
-             <button className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold">Update Offer</button>
+             <div className="bg-slate-50 rounded-xl p-3 text-sm font-medium text-slate-700">
+               {myListing.special_offer || "No active offer. Click Edit to add one!"}
+             </div>
           </div>
 
           <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
@@ -1004,7 +1095,6 @@ const App = () => {
           />
         )}
 
-        {/* NEW: CREATE LISTING MODAL */}
         {showCreateModal && (
           <CreateListingModal 
             onClose={() => setShowCreateModal(false)}
@@ -1024,6 +1114,7 @@ const App = () => {
         onBack={() => setSelectedListing(null)} 
         isSaved={savedIds.includes(selectedListing.id)}
         onToggleSave={toggleSave}
+        onCheckIn={handleCheckIn}
       />
     );
   }
@@ -1153,15 +1244,26 @@ const App = () => {
                         {item.impact_badge && (
                           <div className="absolute bottom-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">REBUILDING PARTNER</div>
                         )}
+                        {item.special_offer && (
+                          <div className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm animate-pulse flex items-center">
+                            <Ticket size={10} className="mr-1"/> DEAL
+                          </div>
+                        )}
                         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold flex items-center shadow-sm">
                           <Star size={12} className="text-yellow-500 fill-current mr-1" /> {item.rating}
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>
+                          {item.special_offer && <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Offer</span>}
+                        </div>
                         <div className="flex items-center text-neutral-500 text-xs mb-3">
                            <MapPin size={12} className="mr-1" /> {item.location}
                         </div>
+                        {item.special_offer && (
+                          <p className="text-xs font-bold text-orange-600 mb-2">🔥 {item.special_offer}</p>
+                        )}
                         <p className="text-sm text-neutral-600 line-clamp-2 mb-4">{item.description}</p>
                         <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
                           <span className="text-sm font-bold text-neutral-900">{item.price}</span>
@@ -1169,7 +1271,7 @@ const App = () => {
                         </div>
                       </div>
                       {savedIds.includes(item.id) && (
-                        <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10">
+                        <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10" style={{top: '3rem'}}>
                           <Heart size={14} className="fill-red-500 text-red-500" />
                         </div>
                       )}
@@ -1294,7 +1396,7 @@ const App = () => {
                            onClick={() => redeemReward(reward.cost)}
                            className="bg-teal-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-500"
                          >
-                           {reward.cost * 10} pts
+                           {reward.cost} pts
                          </button>
                        </div>
                      ))}
@@ -1348,9 +1450,18 @@ const App = () => {
                )}
              </div>
              
-             <button onClick={handleSignOut} className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
-               <LogOut size={16} className="mr-2" /> Sign Out
-             </button>
+             <div className="pt-4 space-y-3">
+               <button onClick={() => {
+                 localStorage.clear();
+                 window.location.reload();
+               }} className="w-full py-3 border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center rounded-xl hover:bg-red-50 transition-colors">
+                 Reset Demo Data
+               </button>
+               
+               <button onClick={handleSignOut} className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
+                 <LogOut size={16} className="mr-2" /> Sign Out
+               </button>
+             </div>
           </div>
         )}
 
