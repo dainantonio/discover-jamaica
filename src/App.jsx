@@ -36,6 +36,24 @@ const CATEGORIES = [
 
 const LISTINGS = [
   {
+    id: 0, // NEW LISTING - P&T Island Tours
+    name: "P&T Island Tours",
+    category: 'adventure',
+    rating: 5.0,
+    reviews: 42,
+    price: '$$',
+    location: "Montego Bay, St. James",
+    coordinates: [18.476, -77.92], // Approx near MoBay Airport
+    image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", // Scenic road/tour image
+    description: "Authentic private airport transfers and tours where you start your vacation the moment you land.",
+    full_bio: "We aren't just a booking site; we are local Jamaicans passionate about showing you our home. Whether you need a safe ride to your resort or want to discover hidden gems off the beaten path, we treat every guest like family.",
+    impact_score: 98,
+    scout_verified: "Direct Partner",
+    amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified", "Car Seats"],
+    impact_badge: true,
+    whatsapp: "18764859759"
+  },
+  {
     id: 1,
     name: "Mystic Mountain",
     category: 'adventure',
@@ -112,9 +130,13 @@ const DetailView = ({ item, onBack }) => {
 
   const handleBooking = () => {
     setBooked(true);
-    const message = `Hi ${item.name}, I saw you on DiscoverJA! I would like to make a reservation.`;
+    const message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking a tour/transfer.`;
     const url = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(message)}`;
+    
+    // In a real browser, this opens a new tab. 
+    // We log it here to confirm it works in the preview logic.
     console.log("Opening WhatsApp:", url);
+    window.open(url, '_blank');
   };
 
   return (
@@ -137,7 +159,7 @@ const DetailView = ({ item, onBack }) => {
           <ShieldCheck className="text-teal-600 shrink-0" size={24} />
           <div>
             <h3 className="font-bold text-teal-900 text-sm">Verified Open</h3>
-            <p className="text-teal-700 text-xs">Confirmed by Scout <strong>{item.scout_verified}</strong> 24 hours ago.</p>
+            <p className="text-teal-700 text-xs">Confirmed by Scout <strong>{item.scout_verified}</strong></p>
           </div>
         </div>
 
@@ -149,7 +171,7 @@ const DetailView = ({ item, onBack }) => {
            <div className="w-full bg-neutral-100 h-3 rounded-full overflow-hidden">
              <div className="bg-gradient-to-r from-teal-400 to-green-500 h-full rounded-full" style={{ width: `${item.impact_score}%` }}></div>
            </div>
-           <p className="text-xs text-neutral-500 mt-2">High impact: This business directly funds local repairs.</p>
+           <p className="text-xs text-neutral-500 mt-2">High impact: This business directly funds local recovery.</p>
         </div>
 
         <div>
@@ -202,7 +224,7 @@ const App = () => {
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
 
-  // --- IMPROVED FILTER LOGIC ---
+  // --- FILTER LOGIC ---
   const filteredListings = LISTINGS.filter(item => {
     // 1. Check Category
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
