@@ -5,7 +5,7 @@ import {
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
-  CloudRain, CalendarDays, Info
+  CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -28,6 +28,19 @@ const CATEGORIES = [
 const SAFETY_ALERTS = [
   { id: 1, type: 'weather', text: "Afternoon showers expected in Portland. Drive carefully.", icon: <CloudRain size={14}/> },
   { id: 2, type: 'road', text: "Road work on North Coast Highway near Falmouth.", icon: <Info size={14}/> }
+];
+
+const STORIES = [
+  { id: 1, user: "Ricks Cafe", image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=200", text: "Sunset Live! 🎸" },
+  { id: 2, user: "Blue Mtn", image: "https://images.unsplash.com/photo-1517142089942-ba376ce32a2e?auto=format&fit=crop&q=80&w=200", text: "Harvest Day ☕" },
+  { id: 3, user: "Boston Jerk", image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=200", text: "Fresh Off Grill 🔥" },
+  { id: 4, user: "Bamboo Raft", image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=200", text: "River Clear 🌊" },
+];
+
+const REWARDS = [
+  { id: 1, title: "Free Blue Mountain Coffee", cost: 2, icon: "☕", desc: "Redeem at any partner café." },
+  { id: 2, title: "10% Off Eco-Tours", cost: 4, icon: "🌿", desc: "Valid for hiking and rafting." },
+  { id: 3, title: "Donate $10 to Recovery", cost: 5, icon: "❤️", desc: "We donate on your behalf." },
 ];
 
 const INITIAL_LISTINGS = [
@@ -558,6 +571,7 @@ const App = () => {
   const [savedIds, setSavedIds] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [points, setPoints] = useState(150); // MOCK POINTS
 
   // Business Owner State
   const [isBusinessOpen, setIsBusinessOpen] = useState(true);
@@ -584,6 +598,15 @@ const App = () => {
       setSavedIds(savedIds.filter(itemId => itemId !== id));
     } else {
       setSavedIds([...savedIds, id]);
+    }
+  };
+
+  const redeemReward = (cost) => {
+    if (points >= cost * 10) { // Assuming 1 stamp = 10 points for display
+      setPoints(points - (cost * 10));
+      alert("Reward Redeemed! Show this to the cashier.");
+    } else {
+      alert("Not enough points! Visit more places to earn stamps.");
     }
   };
 
@@ -764,13 +787,18 @@ const App = () => {
           <span className="font-bold text-lg tracking-tight">Discover<span className="text-teal-600">JA</span></span>
         </div>
         
-        {/* SAFETY ALERT BUTTON */}
-        <button 
-          onClick={() => setShowSafetyModal(true)}
-          className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold border border-red-100 animate-pulse"
-        >
-          <ShieldAlert size={14} /> Safety
-        </button>
+        {/* ALERT BUTTONS */}
+        <div className="flex gap-2">
+          <button className="bg-slate-100 p-2 rounded-full text-slate-500 hover:text-black">
+            <Bell size={18} />
+          </button>
+          <button 
+            onClick={() => setShowSafetyModal(true)}
+            className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold border border-red-100"
+          >
+            <ShieldAlert size={14} /> Safety
+          </button>
+        </div>
       </header>
 
       <main className="px-4 py-6 space-y-8">
@@ -792,6 +820,23 @@ const App = () => {
         {/* --- DISCOVER TAB --- */}
         {activeTab === 'discover' && (
           <>
+            {/* ISLAND STORIES */}
+            <div>
+              <h3 className="font-bold text-sm text-slate-500 mb-3 uppercase tracking-wide">Live on Island</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                {STORIES.map(story => (
+                  <div key={story.id} className="flex flex-col items-center gap-2 shrink-0">
+                    <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-yellow-400 to-red-500">
+                      <div className="w-full h-full rounded-full border-2 border-white overflow-hidden">
+                        <img src={story.image} className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium text-center leading-tight max-w-[60px]">{story.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <section className="space-y-4">
               <h1 className="text-3xl font-bold leading-tight text-neutral-800">Wah Gwaan, <br/><span className="text-teal-600">Ready to explore?</span></h1>
               <div className="relative">
@@ -935,7 +980,7 @@ const App = () => {
         {/* --- PROFILE TAB --- */}
         {activeTab === 'profile' && (
           <div className="space-y-6">
-             <div className="flex items-center space-x-4 mb-8">
+             <div className="flex items-center space-x-4 mb-4">
                 <div className="w-20 h-20 bg-neutral-200 rounded-full border-4 border-white shadow-md overflow-hidden">
                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover"/>
                 </div>
@@ -943,6 +988,42 @@ const App = () => {
                    <h2 className="text-2xl font-bold">Jamie S.</h2>
                    <div className="flex items-center text-teal-600 font-bold text-sm bg-teal-50 px-2 py-1 rounded-md inline-block mt-1">
                       <Award size={14} className="mr-1" /> Level 2 Scout
+                   </div>
+                </div>
+             </div>
+
+             {/* REWARDS STORE */}
+             <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div className="relative z-10">
+                   <div className="flex justify-between items-center mb-6">
+                     <div>
+                       <h3 className="font-bold text-lg flex items-center"><Gift size={18} className="mr-2 text-teal-400" /> Rewards Bazaar</h3>
+                       <p className="text-xs text-slate-400">Redeem your stamps for real perks.</p>
+                     </div>
+                     <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center">
+                       <Coins size={14} className="mr-2 text-yellow-400"/>
+                       <span className="font-bold">{points} pts</span>
+                     </div>
+                   </div>
+
+                   <div className="space-y-3">
+                     {REWARDS.map(reward => (
+                       <div key={reward.id} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-lg">{reward.icon}</div>
+                           <div>
+                             <div className="font-bold text-sm">{reward.title}</div>
+                             <div className="text-[10px] text-slate-400">{reward.desc}</div>
+                           </div>
+                         </div>
+                         <button 
+                           onClick={() => redeemReward(reward.cost)}
+                           className="bg-teal-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-500"
+                         >
+                           {reward.cost * 10} pts
+                         </button>
+                       </div>
+                     ))}
                    </div>
                 </div>
              </div>
