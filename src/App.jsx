@@ -202,14 +202,17 @@ const App = () => {
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
 
-  // --- FILTER LOGIC ---
+  // --- IMPROVED FILTER LOGIC ---
   const filteredListings = LISTINGS.filter(item => {
     // 1. Check Category
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     
-    // 2. Check Search Text (Name or Location)
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    // 2. Check Search (Expanded to check Name, Location, Description, AND Category)
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(query) || 
+                          item.location.toLowerCase().includes(query) ||
+                          item.description.toLowerCase().includes(query) ||
+                          item.category.toLowerCase().includes(query);
     
     return matchesCategory && matchesSearch;
   });
@@ -246,7 +249,6 @@ const App = () => {
         </header>
 
         <main className="p-6 space-y-6">
-          
           {/* Quick Actions Grid */}
           <div>
             <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
@@ -310,11 +312,9 @@ const App = () => {
                 <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl border-4 border-white shadow-lg -mt-16">JB</div>
                 <h3 className="text-2xl font-bold mb-1">Scan to Verify</h3>
                 <p className="text-slate-500 text-sm mb-6">Show this to scouts or tourists.</p>
-                
                 <div className="bg-slate-900 p-6 rounded-2xl mb-6 inline-block shadow-xl">
                    <QrCode size={160} className="text-white" />
                 </div>
-                
                 <button 
                   onClick={() => setShowQR(false)}
                   className="w-full py-3 bg-slate-100 text-slate-900 font-bold rounded-xl"
@@ -447,12 +447,13 @@ const App = () => {
         {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
+             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {LISTINGS.map(item => (
+                {filteredListings.map(item => (
                    <Marker key={item.id} position={item.coordinates}>
                       <Popup>
                          <div className="p-1 text-center">
@@ -468,8 +469,23 @@ const App = () => {
                    </Marker>
                 ))}
              </MapContainer>
+             
+             {/* Floating Search in Map Mode */}
+             <div className="absolute top-4 left-4 right-4 z-[1000]">
+               <div className="relative shadow-lg">
+                  <Search className="absolute left-4 top-3.5 text-neutral-500" size={20} />
+                  <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Filter map..." 
+                    className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl focus:outline-none" 
+                  />
+               </div>
+             </div>
+
              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-lg z-[1000]">
-                Showing {LISTINGS.length} Verified Locations
+                Showing {filteredListings.length} Verified Locations
              </div>
           </div>
         )}
