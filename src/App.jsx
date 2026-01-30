@@ -4,7 +4,8 @@ import {
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
-  Locate, Save, ArrowRight, Briefcase, Printer, Car
+  Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
+  CloudRain, CalendarDays, Info
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -17,16 +18,21 @@ import L from 'leaflet';
  */
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
-  { id: 'experience', label: 'Experiences', icon: '🎨' }, // NEW: The Micro-Tourism Category
+  { id: 'experience', label: 'Experiences', icon: '🎨' },
   { id: 'food', label: 'Eat & Drink', icon: '🍹' },
   { id: 'adventure', label: 'Adventure', icon: '🧗' },
   { id: 'culture', label: 'Culture', icon: '🥁' },
   { id: 'stay', label: 'Stays', icon: '🏡' },
 ];
 
+const SAFETY_ALERTS = [
+  { id: 1, type: 'weather', text: "Afternoon showers expected in Portland. Drive carefully.", icon: <CloudRain size={14}/> },
+  { id: 2, type: 'road', text: "Road work on North Coast Highway near Falmouth.", icon: <Info size={14}/> }
+];
+
 const INITIAL_LISTINGS = [
   {
-    id: 4, // NEW EXPERIENCE LISTING
+    id: 4, 
     name: "Auntie V's Basket Weaving",
     category: 'experience',
     rating: 5.0,
@@ -143,6 +149,13 @@ const createEmojiIcon = (category) => {
 
 // --- SUB-COMPONENTS ---
 
+const ViewToggle = ({ mode, setMode }) => (
+  <div className="fixed top-20 right-4 z-[1000] bg-white/90 backdrop-blur rounded-full p-1 border border-neutral-200 shadow-lg flex">
+    <button onClick={() => setMode('traveler')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'traveler' ? 'bg-teal-600 text-white shadow-md' : 'text-neutral-500'}`}>Traveler</button>
+    <button onClick={() => setMode('business')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${mode === 'business' ? 'bg-orange-500 text-white shadow-md' : 'text-neutral-500'}`}>Owner</button>
+  </div>
+);
+
 // Map Component to Handle "Locate Me"
 const LocationMarker = () => {
   const map = useMap();
@@ -168,6 +181,56 @@ const LocationMarker = () => {
     </button>
   );
 };
+
+const SafetyModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in zoom-in-95 duration-200">
+    <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white">
+      <X size={32} />
+    </button>
+    
+    <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mb-6 shadow-2xl animate-pulse">
+      <ShieldAlert size={48} className="text-white" />
+    </div>
+    
+    <h2 className="text-3xl font-bold text-white mb-2">Safety Center</h2>
+    <p className="text-white/60 mb-10 text-center max-w-xs">Quick access to emergency services and verification tools.</p>
+    
+    <div className="w-full max-w-sm space-y-4">
+      <a href="tel:119" className="flex items-center justify-between bg-white text-red-600 p-5 rounded-2xl shadow-lg active:scale-95 transition-transform">
+        <div className="flex items-center gap-4">
+          <div className="bg-red-100 p-2 rounded-full"><PhoneCall size={24}/></div>
+          <div className="text-left">
+            <div className="font-bold text-lg">Call Police</div>
+            <div className="text-xs opacity-70">Emergency: 119</div>
+          </div>
+        </div>
+        <ArrowRight size={20} />
+      </a>
+
+      <a href="tel:110" className="flex items-center justify-between bg-white text-orange-600 p-5 rounded-2xl shadow-lg active:scale-95 transition-transform">
+        <div className="flex items-center gap-4">
+          <div className="bg-orange-100 p-2 rounded-full"><PhoneCall size={24}/></div>
+          <div className="text-left">
+            <div className="font-bold text-lg">Call Ambulance</div>
+            <div className="text-xs opacity-70">Emergency: 110</div>
+          </div>
+        </div>
+        <ArrowRight size={20} />
+      </a>
+
+      <div className="bg-slate-800 p-5 rounded-2xl border border-slate-700 mt-8">
+        <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+          <Car size={18} className="text-teal-400"/> Verify Driver
+        </h3>
+        <p className="text-slate-400 text-xs mb-3">Enter the 4-digit ID found on the taxi window sticker.</p>
+        <div className="flex gap-2">
+          <input type="text" placeholder="ID #" className="bg-slate-900 text-white border border-slate-600 rounded-xl px-4 py-3 w-full font-mono tracking-widest text-center focus:outline-none focus:border-teal-500" />
+          <button className="bg-teal-600 text-white px-6 py-3 rounded-xl font-bold">Verify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const EditListingModal = ({ listing, onClose, onSave }) => {
   const [formData, setFormData] = useState({ ...listing });
@@ -234,10 +297,16 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
 const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
   const [activeTab, setActiveTab] = useState('about');
   const [booked, setBooked] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const handleBooking = () => {
     setBooked(true);
-    const message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking.`;
+    let message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking.`;
+    
+    if (selectedDate) {
+      message += ` I'm looking at ${selectedDate}.`;
+    }
+
     const url = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -257,6 +326,17 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
       alert("Link copied to clipboard!");
     }
   };
+
+  // Generate next 5 days for date picker
+  const nextDays = Array.from({length: 5}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i + 1);
+    return {
+      day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      date: d.getDate(),
+      full: d.toLocaleDateString()
+    };
+  });
 
   return (
     <div className="bg-white min-h-screen pb-32 animate-in slide-in-from-bottom-4 duration-300 relative z-[2000]">
@@ -323,6 +403,25 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
                <p className="text-xs text-neutral-500 mt-2">High impact: This business directly funds local recovery.</p>
             </div>
 
+            {/* EXPERIENCE DATE PICKER */}
+            {item.category === 'experience' && (
+              <div>
+                <h3 className="font-bold text-lg mb-3 flex items-center"><CalendarDays size={18} className="mr-2 text-teal-600"/> Availability</h3>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {nextDays.map((day, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => setSelectedDate(day.full)}
+                      className={`flex-shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border-2 transition-all ${selectedDate === day.full ? 'border-teal-600 bg-teal-50 text-teal-900' : 'border-neutral-100 bg-white text-neutral-500'}`}
+                    >
+                      <span className="text-xs font-bold uppercase">{day.day}</span>
+                      <span className="text-xl font-bold">{day.date}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <h3 className="font-bold text-lg mb-2">Our Story</h3>
               <p className="text-neutral-600 leading-relaxed text-sm">{item.full_bio}</p>
@@ -380,7 +479,7 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
                 className="w-full bg-[#25D366] text-white py-3.5 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center hover:bg-[#20bd5a]"
               >
                 <Phone size={20} className="mr-2" />
-                Book via WhatsApp
+                {item.category === 'experience' ? 'Request Class Spot' : 'Book via WhatsApp'}
               </button>
             )}
          </div>
@@ -446,6 +545,7 @@ const App = () => {
   // APP STATE
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mode, setMode] = useState('traveler'); // 'traveler' or 'business'
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
   
   // NAVIGATION STATE
   const [activeTab, setActiveTab] = useState('discover');
@@ -517,13 +617,10 @@ const App = () => {
 
   // 2. BUSINESS OWNER VIEW
   if (mode === 'business') {
-    // Assuming the user owns the first listing for demo purposes
-    const myListing = listings[0]; // Currently P&T Island Tours
+    const myListing = listings[0]; 
 
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 animate-in fade-in duration-300">
-        
-        {/* Header */}
         <header className="bg-white px-6 pt-6 pb-8 border-b border-slate-200 rounded-b-3xl shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-slate-800">Command Center</h1>
@@ -533,7 +630,6 @@ const App = () => {
             </div>
           </div>
 
-          {/* Live Status Toggle */}
           <div className={`p-1 rounded-2xl flex items-center justify-between border transition-colors ${isBusinessOpen ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
              <div className="flex items-center px-4 py-3">
                <div className={`w-3 h-3 rounded-full mr-3 ${isBusinessOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
@@ -552,7 +648,6 @@ const App = () => {
         </header>
 
         <main className="p-6 space-y-6">
-          
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
              <div className="w-16 h-16 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
                <img src={myListing.image} className="w-full h-full object-cover" />
@@ -563,7 +658,6 @@ const App = () => {
              </div>
           </div>
 
-          {/* Quick Actions Grid */}
           <div>
             <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -584,7 +678,6 @@ const App = () => {
             </div>
           </div>
 
-          {/* Today's Special Editor */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
              <div className="flex justify-between items-start mb-3">
                <h3 className="font-bold text-slate-800 flex items-center"><Bell size={16} className="mr-2 text-orange-500"/> Today's Flash Offer</h3>
@@ -609,27 +702,21 @@ const App = () => {
           </section>
         </main>
 
-        {/* QR Code / Driver Kit Modal */}
         {showQR && (
           <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setShowQR(false)}>
              <div className="bg-white w-full max-w-sm rounded-3xl p-0 overflow-hidden relative animate-in zoom-in-50 duration-200" onClick={e => e.stopPropagation()}>
-                
-                {/* Print Preview Area */}
                 <div className="bg-slate-900 p-8 text-center text-white relative">
                    <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl border-4 border-teal-500 shadow-lg">JA</div>
                    <h3 className="text-2xl font-bold mb-1">SCAN ME</h3>
                    <p className="text-slate-400 text-xs mb-6 uppercase tracking-widest">Verified Tour Driver</p>
-                   
                    <div className="bg-white p-4 rounded-xl mb-2 inline-block">
                       <QrCode size={140} className="text-black" />
                    </div>
                    <p className="text-xs text-slate-500">DiscoverJA.com/driver/123</p>
                 </div>
-
                 <div className="p-6 bg-slate-50 border-t border-slate-200">
                    <h4 className="font-bold text-slate-800 mb-2 flex items-center"><Car size={16} className="mr-2"/> Driver Kit</h4>
                    <p className="text-xs text-slate-500 mb-4">Print this and stick it to your passenger window or headrest.</p>
-                   
                    <div className="grid grid-cols-2 gap-3">
                      <button className="py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-100">
                        <Printer size={16} className="mr-2" /> Print PDF
@@ -643,7 +730,6 @@ const App = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
         {showEditModal && (
           <EditListingModal 
             listing={myListing} 
@@ -677,13 +763,32 @@ const App = () => {
           <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">J</div>
           <span className="font-bold text-lg tracking-tight">Discover<span className="text-teal-600">JA</span></span>
         </div>
-        <div className="w-9 h-9 bg-neutral-200 rounded-full border-2 border-white shadow-sm overflow-hidden">
-           <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover"/>
-        </div>
+        
+        {/* SAFETY ALERT BUTTON */}
+        <button 
+          onClick={() => setShowSafetyModal(true)}
+          className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold border border-red-100 animate-pulse"
+        >
+          <ShieldAlert size={14} /> Safety
+        </button>
       </header>
 
       <main className="px-4 py-6 space-y-8">
         
+        {/* LIVE ALERT TICKER */}
+        <div className="bg-slate-900 text-white p-3 rounded-xl flex items-center gap-3 shadow-md overflow-hidden relative">
+           <div className="bg-red-500 p-1.5 rounded-lg animate-pulse"><ShieldAlert size={14} className="text-white"/></div>
+           <div className="flex-1 overflow-hidden">
+             <div className="text-xs font-bold flex gap-4 animate-marquee whitespace-nowrap">
+               {SAFETY_ALERTS.map(alert => (
+                 <span key={alert.id} className="flex items-center gap-2">
+                   {alert.icon} {alert.text}
+                 </span>
+               ))}
+             </div>
+           </div>
+        </div>
+
         {/* --- DISCOVER TAB --- */}
         {activeTab === 'discover' && (
           <>
@@ -700,7 +805,6 @@ const App = () => {
                 />
               </div>
               
-              {/* Category Filter */}
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {CATEGORIES.map(cat => (
                   <button 
@@ -752,7 +856,6 @@ const App = () => {
                           <span className="text-teal-600 text-sm font-bold flex items-center">View Details <ArrowLeft size={16} className="rotate-180 ml-1"/></span>
                         </div>
                       </div>
-                      {/* Heart Indicator on Card if Saved */}
                       {savedIds.includes(item.id) && (
                         <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10">
                           <Heart size={14} className="fill-red-500 text-red-500" />
@@ -781,7 +884,6 @@ const App = () => {
         {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
-             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -811,7 +913,6 @@ const App = () => {
                 ))}
              </MapContainer>
              
-             {/* Floating Search in Map Mode */}
              <div className="absolute top-4 left-4 right-4 z-[1000]">
                <div className="relative shadow-lg">
                   <Search className="absolute left-4 top-3.5 text-neutral-500" size={20} />
@@ -899,6 +1000,9 @@ const App = () => {
         )}
 
       </main>
+
+      {/* GLOBAL SAFETY MODAL */}
+      {showSafetyModal && <SafetyModal onClose={() => setShowSafetyModal(false)} />}
 
       <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-[1000]">
         <div className="flex justify-between items-center max-w-sm mx-auto">
