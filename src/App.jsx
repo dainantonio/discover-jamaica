@@ -6,7 +6,7 @@ import {
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
   CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
-  Map as MapIcon, Sun, DollarSign
+  Map as MapIcon, Sun, DollarSign, Plane
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -20,10 +20,21 @@ import L from 'leaflet';
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
   { id: 'experience', label: 'Experiences', icon: '🎨' },
+  { id: 'transfers', label: 'Transfers', icon: '🚖' },
   { id: 'food', label: 'Eat & Drink', icon: '🍹' },
   { id: 'adventure', label: 'Adventure', icon: '🧗' },
   { id: 'culture', label: 'Culture', icon: '🥁' },
   { id: 'stay', label: 'Stays', icon: '🏡' },
+];
+
+const REGIONS = [
+  { id: 'all', label: 'All Island' },
+  { id: 'montegobay', label: 'Montego Bay' },
+  { id: 'kingston', label: 'Kingston' },
+  { id: 'negril', label: 'Negril' },
+  { id: 'ochorios', label: 'Ocho Rios' },
+  { id: 'portantonio', label: 'Port Antonio' },
+  { id: 'southcoast', label: 'South Coast' },
 ];
 
 const SAFETY_ALERTS = [
@@ -49,6 +60,7 @@ const INITIAL_LISTINGS = [
     id: 4, 
     name: "Auntie V's Basket Weaving",
     category: 'experience',
+    region: 'southcoast',
     rating: 5.0,
     reviews: 18,
     price: '$40',
@@ -65,16 +77,17 @@ const INITIAL_LISTINGS = [
   },
   {
     id: 0,
-    name: "P&T Island Tours",
-    category: 'adventure',
+    name: "P&T MoBay Airport Transfer",
+    category: 'transfers',
+    region: 'montegobay',
     rating: 5.0,
     reviews: 42,
-    price: '$$',
-    location: "Montego Bay, St. James",
+    price: '$30+',
+    location: "Sangster Intl Airport (MBJ)",
     coordinates: [18.476, -77.92], 
     image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", 
-    description: "Authentic private airport transfers and tours where you start your vacation the moment you land.",
-    full_bio: "We aren't just a booking site; we are local Jamaicans passionate about showing you our home. Whether you need a safe ride to your resort or want to discover hidden gems off the beaten path, we treat every guest like family.",
+    description: "Private, AC transfers from MBJ to any hotel in Montego Bay or Negril.",
+    full_bio: "Start your vacation the moment you land. No waiting on big buses. We track your flight and meet you with a Red Stripe and a smile. JTB Certified driver.",
     impact_score: 98,
     scout_verified: "Direct Partner",
     amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified"],
@@ -82,9 +95,29 @@ const INITIAL_LISTINGS = [
     whatsapp: "18764859759"
   },
   {
+    id: 5,
+    name: "Kingston City Runner",
+    category: 'transfers',
+    region: 'kingston',
+    rating: 4.9,
+    reviews: 15,
+    price: '$25+',
+    location: "Norman Manley Intl (KIN)",
+    coordinates: [17.936, -76.779],
+    image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
+    description: "Reliable airport pickup and city drops for business or leisure.",
+    full_bio: "Expert navigation of Kingston traffic. Safe, reliable, and always on time for your flight.",
+    impact_score: 90,
+    scout_verified: "Sarah J.",
+    amenities: ["Business Class", "Wifi in Car", "Receipts Available"],
+    impact_badge: false,
+    whatsapp: "18765551234"
+  },
+  {
     id: 1,
     name: "Mystic Mountain",
     category: 'adventure',
+    region: 'ochorios',
     rating: 4.8,
     reviews: 1240,
     price: '$$',
@@ -103,6 +136,7 @@ const INITIAL_LISTINGS = [
     id: 2,
     name: "Scotchies Jerk Center",
     category: 'food',
+    region: 'montegobay',
     rating: 4.9,
     reviews: 3500,
     price: '$',
@@ -121,6 +155,7 @@ const INITIAL_LISTINGS = [
     id: 3,
     name: "Bob Marley Museum",
     category: 'culture',
+    region: 'kingston',
     rating: 4.7,
     reviews: 2100,
     price: '$$$',
@@ -207,26 +242,32 @@ const SafetyModal = ({ onClose }) => (
     </div>
     
     <h2 className="text-3xl font-bold text-white mb-2">Safety Center</h2>
-    <p className="text-white/60 mb-10 text-center max-w-xs">Quick access to emergency services and verification tools.</p>
+    <p className="text-white/60 mb-8 text-center max-w-xs">Quick access to emergency services and official updates.</p>
     
     <div className="w-full max-w-sm space-y-4">
+      {/* NEW: Visit Jamaica Official Alert Link */}
+      <a 
+        href="https://www.visitjamaica.com/travel-alerts/tours-attractions-reopenings/" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="flex items-center justify-between bg-teal-600 text-white p-5 rounded-2xl shadow-lg active:scale-95 transition-transform border border-teal-400/30"
+      >
+        <div className="flex items-center gap-4">
+          <div className="bg-teal-500 p-2 rounded-full"><Globe size={24}/></div>
+          <div className="text-left">
+            <div className="font-bold text-lg">Official Travel Alerts</div>
+            <div className="text-xs opacity-80">VisitJamaica.com (Opens new tab)</div>
+          </div>
+        </div>
+        <ArrowRight size={20} />
+      </a>
+
       <a href="tel:119" className="flex items-center justify-between bg-white text-red-600 p-5 rounded-2xl shadow-lg active:scale-95 transition-transform">
         <div className="flex items-center gap-4">
           <div className="bg-red-100 p-2 rounded-full"><PhoneCall size={24}/></div>
           <div className="text-left">
             <div className="font-bold text-lg">Call Police</div>
             <div className="text-xs opacity-70">Emergency: 119</div>
-          </div>
-        </div>
-        <ArrowRight size={20} />
-      </a>
-
-      <a href="tel:110" className="flex items-center justify-between bg-white text-orange-600 p-5 rounded-2xl shadow-lg active:scale-95 transition-transform">
-        <div className="flex items-center gap-4">
-          <div className="bg-orange-100 p-2 rounded-full"><PhoneCall size={24}/></div>
-          <div className="text-left">
-            <div className="font-bold text-lg">Call Ambulance</div>
-            <div className="text-xs opacity-70">Emergency: 110</div>
           </div>
         </div>
         <ArrowRight size={20} />
@@ -761,6 +802,7 @@ const App = () => {
   const [savedIds, setSavedIds] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [activeRegion, setActiveRegion] = useState('all'); // NEW: Region Filter
   const [points, setPoints] = useState(150); // MOCK POINTS
 
   // Business Owner State
@@ -804,12 +846,15 @@ const App = () => {
   // Filter Logic
   const filteredListings = listings.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    const matchesRegion = activeRegion === 'all' || (item.region && item.region === activeRegion); // Region Check
+    
     const query = searchQuery.toLowerCase();
     const matchesSearch = item.name.toLowerCase().includes(query) || 
                           item.location.toLowerCase().includes(query) ||
                           item.description.toLowerCase().includes(query) ||
                           item.category.toLowerCase().includes(query);
-    return matchesCategory && matchesSearch;
+    
+    return matchesCategory && matchesRegion && matchesSearch;
   });
 
   // Get Saved Listings for Profile
@@ -1056,6 +1101,7 @@ const App = () => {
                 />
               </div>
               
+              {/* CATEGORY FILTER */}
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {CATEGORIES.map(cat => (
                   <button 
@@ -1066,6 +1112,21 @@ const App = () => {
                     `}
                   >
                     <span>{cat.icon}</span><span className="font-bold text-sm">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* NEW: REGION FILTER */}
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral-100/50">
+                {REGIONS.map(reg => (
+                  <button 
+                    key={reg.id} 
+                    onClick={() => setActiveRegion(reg.id)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all
+                      ${activeRegion === reg.id ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}
+                    `}
+                  >
+                    {reg.label}
                   </button>
                 ))}
               </div>
@@ -1121,7 +1182,7 @@ const App = () => {
                   <h3 className="font-bold text-lg">No places found</h3>
                   <p className="text-sm">Try searching for something else or clear your filters.</p>
                   <button 
-                    onClick={() => {setSearchQuery(''); setActiveCategory('all');}}
+                    onClick={() => {setSearchQuery(''); setActiveCategory('all'); setActiveRegion('all');}}
                     className="mt-4 text-teal-600 font-bold text-sm"
                   >
                     Clear Filters
