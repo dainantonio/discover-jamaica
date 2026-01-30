@@ -5,7 +5,8 @@ import {
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
-  CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap
+  CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
+  Map as MapIcon, Sun, DollarSign
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -244,6 +245,195 @@ const SafetyModal = ({ onClose }) => (
     </div>
   </div>
 );
+
+// --- NEW COMPONENT: TRIP PLANNER ---
+const TripPlanner = ({ listings }) => {
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const generateTrip = () => {
+    setLoading(true);
+    // Simulate AI generation
+    setTimeout(() => {
+      setTrip({
+        name: "Eco-Discovery Weekend",
+        totalCost: "$120",
+        days: [
+          {
+            day: 1,
+            title: "Mountain & Mist",
+            activities: [
+              listings.find(l => l.name.includes("Blue Mtn")) || listings[2], // Fallback
+              listings.find(l => l.name.includes("Mystic")) || listings[2]
+            ]
+          },
+          {
+            day: 2,
+            title: "Culture & Craft",
+            activities: [
+              listings.find(l => l.name.includes("Basket")) || listings[0],
+              listings.find(l => l.name.includes("Marley")) || listings[4]
+            ]
+          }
+        ]
+      });
+      setLoading(false);
+    }, 1500);
+  };
+
+  if (!trip) {
+    return (
+      <div className="p-6 h-full flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4">
+        <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mb-6">
+          <MapIcon size={40} className="text-teal-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Trip Genie 🧞‍♂️</h2>
+        <p className="text-slate-500 mb-8 max-w-xs">Tell us your vibe, and we'll build a perfect itinerary supporting local businesses.</p>
+        
+        <button 
+          onClick={generateTrip}
+          disabled={loading}
+          className="w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
+        >
+          {loading ? (
+            <span className="animate-pulse">Consulting the Spirits...</span>
+          ) : (
+            <>
+              <Zap size={20} className="fill-yellow-400 text-yellow-400" />
+              Generate 2-Day Eco Trip
+            </>
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6 animate-in fade-in duration-500 pb-24">
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">{trip.name}</h2>
+          <p className="text-teal-600 font-medium text-sm">Est. Cost: {trip.totalCost}</p>
+        </div>
+        <button onClick={() => setTrip(null)} className="text-xs font-bold text-slate-400 underline">Reset</button>
+      </div>
+
+      <div className="space-y-6">
+        {trip.days.map((day, i) => (
+          <div key={i} className="relative pl-8 border-l-2 border-teal-100">
+            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-teal-500 ring-4 ring-white"></div>
+            <h3 className="font-bold text-lg text-slate-800 mb-1">Day {day.day}</h3>
+            <p className="text-xs text-slate-500 uppercase tracking-wide font-bold mb-4">{day.title}</p>
+            
+            <div className="space-y-3">
+              {day.activities.filter(Boolean).map((act, idx) => (
+                <div key={idx} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex gap-3">
+                  <div className="w-12 h-12 bg-slate-200 rounded-lg overflow-hidden shrink-0">
+                    <img src={act.image} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-800">{act.name}</h4>
+                    <span className="text-xs text-slate-500">{act.category} • {act.price}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2">
+        <Save size={18} /> Save Itinerary
+      </button>
+    </div>
+  );
+};
+
+// --- NEW COMPONENT: CREATE LISTING ---
+const CreateListingModal = ({ onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'experience',
+    description: '',
+    price: '',
+    whatsapp: '',
+    amenities: ''
+  });
+
+  const handleSubmit = () => {
+    const newListing = {
+      id: Date.now(), // Random ID
+      ...formData,
+      rating: 5.0,
+      reviews: 0,
+      location: "New Location",
+      coordinates: [18.405, -77.103], // Default to center of island
+      image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=800", // Placeholder
+      amenities: formData.amenities.split(',').map(s => s.trim()),
+      impact_score: 100,
+      impact_badge: true,
+      scout_verified: "Pending"
+    };
+    onSave(newListing);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 h-[85vh] sm:h-auto overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-orange-600">New Offering</h2>
+          <button onClick={onClose} className="p-2 bg-neutral-100 rounded-full"><X size={20}/></button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Title</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Sunset Yoga"
+              className="w-full p-3 border rounded-xl mt-1 font-bold"
+              onChange={e => setFormData({...formData, name: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Type</label>
+            <select 
+              className="w-full p-3 border rounded-xl mt-1 bg-white"
+              onChange={e => setFormData({...formData, category: e.target.value})}
+            >
+              {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Price</label>
+            <input 
+              type="text" 
+              placeholder="$50"
+              className="w-full p-3 border rounded-xl mt-1"
+              onChange={e => setFormData({...formData, price: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase">Description</label>
+            <textarea 
+              placeholder="Tell us what makes this special..."
+              className="w-full p-3 border rounded-xl mt-1 text-sm h-24"
+              onChange={e => setFormData({...formData, description: e.target.value})}
+            />
+          </div>
+          <button 
+            onClick={handleSubmit}
+            className="w-full bg-orange-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 shadow-lg hover:bg-orange-700"
+          >
+            <PlusCircle size={18} /> Publish Listing
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EditListingModal = ({ listing, onClose, onSave }) => {
   const [formData, setFormData] = useState({ ...listing });
@@ -578,6 +768,7 @@ const App = () => {
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false); // NEW: Create Listing Modal State
 
   // --- HANDLERS ---
 
@@ -629,6 +820,13 @@ const App = () => {
     const updatedListings = listings.map(l => l.id === updatedListing.id ? updatedListing : l);
     setListings(updatedListings);
     setShowEditModal(false);
+  };
+
+  // NEW: Handle Create Listing
+  const handleCreateSave = (newListing) => {
+    setListings([...listings, newListing]);
+    setShowCreateModal(false);
+    alert("Listing Created! Switch to 'Traveler' mode to see it.");
   };
 
   // --- RENDER ---
@@ -692,11 +890,11 @@ const App = () => {
                 <span className="text-sm font-bold">Show QR Code</span>
               </button>
               <button 
-                onClick={() => setShowEditModal(true)}
-                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
+                onClick={() => setShowCreateModal(true)} // NEW: Create Listing Button
+                className="p-4 bg-orange-600 text-white rounded-2xl border border-orange-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-orange-700 hover:shadow-md transition-all active:scale-95"
               >
-                <Edit3 className="text-blue-500" size={28} />
-                <span className="text-sm font-bold">Edit Listing</span>
+                <PlusCircle className="text-white" size={28} />
+                <span className="text-sm font-bold">New Listing</span>
               </button>
             </div>
           </div>
@@ -758,6 +956,14 @@ const App = () => {
             listing={myListing} 
             onClose={() => setShowEditModal(false)} 
             onSave={handleEditSave} 
+          />
+        )}
+
+        {/* NEW: CREATE LISTING MODAL */}
+        {showCreateModal && (
+          <CreateListingModal 
+            onClose={() => setShowCreateModal(false)}
+            onSave={handleCreateSave}
           />
         )}
       </div>
@@ -929,6 +1135,7 @@ const App = () => {
         {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
+             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -958,6 +1165,7 @@ const App = () => {
                 ))}
              </MapContainer>
              
+             {/* Floating Search in Map Mode */}
              <div className="absolute top-4 left-4 right-4 z-[1000]">
                <div className="relative shadow-lg">
                   <Search className="absolute left-4 top-3.5 text-neutral-500" size={20} />
@@ -975,6 +1183,11 @@ const App = () => {
                 Showing {filteredListings.length} Verified Locations
              </div>
           </div>
+        )}
+
+        {/* --- TRIPS TAB (NEW) --- */}
+        {activeTab === 'trips' && (
+          <TripPlanner listings={listings} />
         )}
 
         {/* --- PROFILE TAB --- */}
@@ -1087,11 +1300,12 @@ const App = () => {
 
       <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-[1000]">
         <div className="flex justify-between items-center max-w-sm mx-auto">
-          {['discover', 'map', 'profile'].map(tab => (
+          {['discover', 'map', 'trips', 'profile'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`flex flex-col items-center gap-1 p-2 ${activeTab === tab ? 'text-teal-600' : 'text-neutral-400'}`}>
               <div className="w-6 h-6 flex items-center justify-center">
                  {tab === 'discover' && <Compass size={24} className={activeTab === tab ? 'fill-current' : ''} />}
                  {tab === 'map' && <MapPin size={24} className={activeTab === tab ? 'fill-current' : ''} />}
+                 {tab === 'trips' && <Calendar size={24} className={activeTab === tab ? 'fill-current' : ''} />}
                  {tab === 'profile' && <User size={24} className={activeTab === tab ? 'fill-current' : ''} />}
               </div>
               <span className="text-[10px] font-bold capitalize">{tab}</span>
