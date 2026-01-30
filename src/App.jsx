@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
-  Trophy, Settings, QrCode, Edit3, Power, Bell, Filter
+  Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -36,20 +36,20 @@ const CATEGORIES = [
 
 const LISTINGS = [
   {
-    id: 0, // NEW LISTING - P&T Island Tours
+    id: 0,
     name: "P&T Island Tours",
     category: 'adventure',
     rating: 5.0,
     reviews: 42,
     price: '$$',
     location: "Montego Bay, St. James",
-    coordinates: [18.476, -77.92], // Approx near MoBay Airport
-    image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", // Scenic road/tour image
+    coordinates: [18.476, -77.92], 
+    image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", 
     description: "Authentic private airport transfers and tours where you start your vacation the moment you land.",
     full_bio: "We aren't just a booking site; we are local Jamaicans passionate about showing you our home. Whether you need a safe ride to your resort or want to discover hidden gems off the beaten path, we treat every guest like family.",
     impact_score: 98,
     scout_verified: "Direct Partner",
-    amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified", "Car Seats"],
+    amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified"],
     impact_badge: true,
     whatsapp: "18764859759"
   },
@@ -109,6 +109,12 @@ const LISTINGS = [
   }
 ];
 
+const MOCK_REVIEWS = [
+  { id: 1, user: "Sarah J.", text: "The view was insane! And knowing my money helps the school next door made it even better.", rating: 5, date: "2 days ago" },
+  { id: 2, user: "Mike T.", text: "Authentic vibes. The owner is super friendly.", rating: 4, date: "1 week ago" },
+  { id: 3, user: "Jessica R.", text: "A bit of a drive, but worth it for the jerk chicken.", rating: 5, date: "3 weeks ago" }
+];
+
 const STAMPS = [
   { id: 1, name: "Rebuild Hero", icon: "🏗️", date: "Oct 24", earned: true },
   { id: 2, name: "Foodie", icon: "🍗", date: "Oct 25", earned: true },
@@ -125,27 +131,85 @@ const ViewToggle = ({ mode, setMode }) => (
   </div>
 );
 
-const DetailView = ({ item, onBack }) => {
+const Onboarding = ({ onComplete }) => (
+  <div className="fixed inset-0 z-[5000] bg-teal-600 text-white flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
+    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-8 backdrop-blur-lg">
+      <Compass size={48} className="text-white" />
+    </div>
+    <h1 className="text-3xl font-bold mb-4 text-center">Welcome to DiscoverJA</h1>
+    <p className="text-center text-teal-100 mb-12 max-w-xs leading-relaxed">
+      The first travel app that helps you explore Jamaica while rebuilding local communities.
+    </p>
+    <div className="space-y-4 w-full max-w-xs">
+      <div className="flex items-center space-x-4 bg-white/10 p-4 rounded-xl">
+         <ShieldCheck className="shrink-0" />
+         <div className="text-sm">
+            <span className="font-bold block">Verified Open</span>
+            <span className="opacity-80">Real-time updates from scouts.</span>
+         </div>
+      </div>
+      <div className="flex items-center space-x-4 bg-white/10 p-4 rounded-xl">
+         <Heart className="shrink-0" />
+         <div className="text-sm">
+            <span className="font-bold block">Impact Tourism</span>
+            <span className="opacity-80">Support local recovery efforts.</span>
+         </div>
+      </div>
+    </div>
+    <button 
+      onClick={onComplete}
+      className="mt-12 w-full max-w-xs bg-white text-teal-700 py-4 rounded-xl font-bold text-lg shadow-xl active:scale-95 transition-transform"
+    >
+      Get Started
+    </button>
+  </div>
+);
+
+const DetailView = ({ item, onBack, isSaved, onToggleSave }) => {
+  const [activeTab, setActiveTab] = useState('about');
   const [booked, setBooked] = useState(false);
 
   const handleBooking = () => {
     setBooked(true);
     const message = `Hi ${item.name}, I saw you on DiscoverJA! I'm interested in booking a tour/transfer.`;
     const url = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(message)}`;
-    
-    // In a real browser, this opens a new tab. 
-    // We log it here to confirm it works in the preview logic.
-    console.log("Opening WhatsApp:", url);
     window.open(url, '_blank');
   };
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Check out ${item.name} on DiscoverJA`,
+          text: item.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing', error);
+      }
+    } else {
+      alert("Link copied to clipboard!");
+    }
+  };
+
   return (
-    <div className="bg-white min-h-screen pb-24 animate-in slide-in-from-bottom-4 duration-300 relative z-[2000]">
+    <div className="bg-white min-h-screen pb-32 animate-in slide-in-from-bottom-4 duration-300 relative z-[2000]">
+      {/* Hero Header */}
       <div className="relative h-72 w-full">
         <img src={item.image} className="w-full h-full object-cover" />
-        <button onClick={onBack} className="absolute top-4 left-4 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-colors z-10">
-          <ArrowLeft size={24} />
-        </button>
+        <div className="absolute top-4 left-4 right-4 flex justify-between z-10">
+          <button onClick={onBack} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-colors">
+            <ArrowLeft size={24} />
+          </button>
+          <div className="flex gap-2">
+            <button onClick={handleShare} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-colors">
+              <Share2 size={24} />
+            </button>
+            <button onClick={() => onToggleSave(item.id)} className={`p-2 backdrop-blur-md rounded-full transition-colors ${isSaved ? 'bg-white text-red-500' : 'bg-white/20 text-white hover:bg-white hover:text-red-500'}`}>
+              <Heart size={24} className={isSaved ? "fill-current" : ""} />
+            </button>
+          </div>
+        </div>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-24 text-white">
           <h1 className="text-3xl font-bold mb-1">{item.name}</h1>
           <div className="flex items-center text-sm opacity-90">
@@ -154,55 +218,104 @@ const DetailView = ({ item, onBack }) => {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex items-start space-x-3">
-          <ShieldCheck className="text-teal-600 shrink-0" size={24} />
+      <div className="p-6">
+        {/* Verification Badge */}
+        <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex flex-col items-center text-center space-y-2 mb-6">
+          <ShieldCheck className="text-teal-600" size={32} />
           <div>
             <h3 className="font-bold text-teal-900 text-sm">Verified Open</h3>
             <p className="text-teal-700 text-xs">Confirmed by Scout <strong>{item.scout_verified}</strong></p>
           </div>
         </div>
 
-        <div>
-           <div className="flex justify-between items-end mb-2">
-             <h3 className="font-bold text-neutral-800">Community Impact Score</h3>
-             <span className="text-teal-600 font-bold text-xl">{item.impact_score}/100</span>
-           </div>
-           <div className="w-full bg-neutral-100 h-3 rounded-full overflow-hidden">
-             <div className="bg-gradient-to-r from-teal-400 to-green-500 h-full rounded-full" style={{ width: `${item.impact_score}%` }}></div>
-           </div>
-           <p className="text-xs text-neutral-500 mt-2">High impact: This business directly funds local recovery.</p>
+        {/* Tab Switcher */}
+        <div className="flex border-b border-neutral-100 mb-6">
+          <button 
+            onClick={() => setActiveTab('about')}
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'about' ? 'text-teal-600 border-teal-600' : 'text-neutral-400 border-transparent'}`}
+          >
+            About
+          </button>
+          <button 
+            onClick={() => setActiveTab('reviews')}
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'reviews' ? 'text-teal-600 border-teal-600' : 'text-neutral-400 border-transparent'}`}
+          >
+            Reviews ({item.reviews})
+          </button>
         </div>
 
-        <div>
-          <h3 className="font-bold text-lg mb-2">About</h3>
-          <p className="text-neutral-600 leading-relaxed text-sm">{item.full_bio}</p>
-        </div>
+        {activeTab === 'about' ? (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div>
+               <div className="flex justify-between items-end mb-2">
+                 <h3 className="font-bold text-neutral-800">Impact Score</h3>
+                 <span className="text-teal-600 font-bold text-xl">{item.impact_score}/100</span>
+               </div>
+               <div className="w-full bg-neutral-100 h-3 rounded-full overflow-hidden">
+                 <div className="bg-gradient-to-r from-teal-400 to-green-500 h-full rounded-full" style={{ width: `${item.impact_score}%` }}></div>
+               </div>
+               <p className="text-xs text-neutral-500 mt-2">High impact: This business directly funds local recovery.</p>
+            </div>
 
-        <div className="flex flex-wrap gap-2">
-           {item.amenities.map(tag => (
-             <span key={tag} className="px-3 py-1 bg-neutral-100 text-neutral-600 text-xs font-bold rounded-full">{tag}</span>
-           ))}
-        </div>
+            <div>
+              <h3 className="font-bold text-lg mb-2">Our Story</h3>
+              <p className="text-neutral-600 leading-relaxed text-sm">{item.full_bio}</p>
+            </div>
 
-        <div className="pt-4">
-           {booked ? (
-             <div className="bg-green-100 text-green-800 p-4 rounded-xl text-center font-bold flex flex-col items-center border border-green-200">
-                <Check size={32} className="mb-2" />
-                WhatsApp Opened!
-                <span className="text-xs font-normal opacity-80 mt-1">Check your other tab to chat with the owner.</span>
-             </div>
-           ) : (
-             <button 
-               onClick={handleBooking}
-               className="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center"
-             >
-               <Phone size={20} className="mr-2" />
-               Book via WhatsApp
-             </button>
-           )}
-           <p className="text-center text-xs text-neutral-400 mt-3">No booking fees. 100% goes to the owner.</p>
-        </div>
+            <div>
+               <h3 className="font-bold text-lg mb-3">Amenities</h3>
+               <div className="flex flex-wrap gap-2">
+                 {item.amenities.map(tag => (
+                   <span key={tag} className="px-3 py-1.5 bg-neutral-100 text-neutral-700 text-xs font-bold rounded-full flex items-center">
+                     <Check size={12} className="mr-1.5 text-green-600" />
+                     {tag}
+                   </span>
+                 ))}
+               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            {MOCK_REVIEWS.map(review => (
+              <div key={review.id} className="bg-neutral-50 p-4 rounded-xl">
+                 <div className="flex justify-between items-start mb-2">
+                    <span className="font-bold text-sm">{review.user}</span>
+                    <span className="text-xs text-neutral-400">{review.date}</span>
+                 </div>
+                 <div className="flex text-yellow-400 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={12} className={i < review.rating ? "fill-current" : "text-neutral-300"} />
+                    ))}
+                 </div>
+                 <p className="text-sm text-neutral-600">"{review.text}"</p>
+              </div>
+            ))}
+            <button className="w-full py-3 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-600">Write a Review</button>
+          </div>
+        )}
+      </div>
+
+      {/* Booking Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-neutral-200 z-[2000] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+         <div className="max-w-md mx-auto">
+            {booked ? (
+              <div className="bg-green-100 text-green-800 p-3 rounded-xl text-center font-bold flex flex-col items-center border border-green-200">
+                 <div className="flex items-center gap-2">
+                   <Check size={20} />
+                   <span>WhatsApp Opened!</span>
+                 </div>
+                 <span className="text-[10px] font-normal opacity-80">Check your other tab to chat.</span>
+              </div>
+            ) : (
+              <button 
+                onClick={handleBooking}
+                className="w-full bg-[#25D366] text-white py-3.5 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center hover:bg-[#20bd5a]"
+              >
+                <Phone size={20} className="mr-2" />
+                Book via WhatsApp
+              </button>
+            )}
+         </div>
       </div>
     </div>
   );
@@ -211,11 +324,13 @@ const DetailView = ({ item, onBack }) => {
 // --- MAIN COMPONENT ---
 
 const App = () => {
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [mode, setMode] = useState('traveler');
   const [activeTab, setActiveTab] = useState('discover');
   const [selectedListing, setSelectedListing] = useState(null);
   
-  // Search & Filter State
+  // Data State
+  const [savedIds, setSavedIds] = useState([]); // Now stores favorites
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
@@ -224,20 +339,32 @@ const App = () => {
   const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
   const [showQR, setShowQR] = useState(false);
 
-  // --- FILTER LOGIC ---
+  // Toggle Favorites
+  const toggleSave = (id) => {
+    if (savedIds.includes(id)) {
+      setSavedIds(savedIds.filter(itemId => itemId !== id));
+    } else {
+      setSavedIds([...savedIds, id]);
+    }
+  };
+
+  // Filter Logic
   const filteredListings = LISTINGS.filter(item => {
-    // 1. Check Category
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    
-    // 2. Check Search (Expanded to check Name, Location, Description, AND Category)
     const query = searchQuery.toLowerCase();
     const matchesSearch = item.name.toLowerCase().includes(query) || 
                           item.location.toLowerCase().includes(query) ||
                           item.description.toLowerCase().includes(query) ||
                           item.category.toLowerCase().includes(query);
-    
     return matchesCategory && matchesSearch;
   });
+
+  // Get Saved Listings for Profile
+  const savedListingsData = LISTINGS.filter(item => savedIds.includes(item.id));
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+  }
 
   // -- BUSINESS OWNER VIEW --
   if (mode === 'business') {
@@ -304,19 +431,6 @@ const App = () => {
              <button className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold">Update Offer</button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-100 p-4 rounded-2xl">
-              <span className="text-xs text-slate-500 font-medium uppercase">Profile Views</span>
-              <div className="text-2xl font-bold mt-1 text-slate-800">142</div>
-              <div className="text-xs text-green-600 flex items-center mt-1"><TrendingUp size={12} className="mr-1"/> +12%</div>
-            </div>
-            <div className="bg-slate-100 p-4 rounded-2xl">
-              <span className="text-xs text-slate-500 font-medium uppercase">Est. Revenue</span>
-              <div className="text-2xl font-bold mt-1 text-slate-800">$4,250</div>
-            </div>
-          </div>
-
           <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
              <div className="relative z-10">
                <h3 className="font-bold text-lg mb-2">Recovery Badge</h3>
@@ -356,7 +470,12 @@ const App = () => {
     return (
       <>
         <ViewToggle mode={mode} setMode={setMode} />
-        <DetailView item={selectedListing} onBack={() => setSelectedListing(null)} />
+        <DetailView 
+          item={selectedListing} 
+          onBack={() => setSelectedListing(null)} 
+          isSaved={savedIds.includes(selectedListing.id)}
+          onToggleSave={toggleSave}
+        />
       </>
     );
   }
@@ -424,7 +543,7 @@ const App = () => {
                     <div 
                       key={item.id} 
                       onClick={() => setSelectedListing(item)}
-                      className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300"
+                      className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300 relative"
                     >
                       <div className="h-48 bg-neutral-200 relative">
                         <img src={item.image} className="w-full h-full object-cover"/>
@@ -446,6 +565,12 @@ const App = () => {
                           <span className="text-teal-600 text-sm font-bold flex items-center">View Details <ArrowLeft size={16} className="rotate-180 ml-1"/></span>
                         </div>
                       </div>
+                      {/* Heart Indicator on Card if Saved */}
+                      {savedIds.includes(item.id) && (
+                        <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10">
+                          <Heart size={14} className="fill-red-500 text-red-500" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -469,7 +594,6 @@ const App = () => {
         {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
-             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -543,20 +667,34 @@ const App = () => {
 
              <div>
                <h3 className="font-bold text-lg mb-4 flex items-center"><Bookmark size={18} className="mr-2" /> Saved Places</h3>
-               <div className="space-y-3">
-                 {LISTINGS.slice(0, 2).map(item => (
-                   <div key={item.id} className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-neutral-100 shadow-sm">
-                      <div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
-                         <img src={item.image} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                         <h4 className="font-bold text-sm">{item.name}</h4>
-                         <span className="text-xs text-neutral-500">{item.location}</span>
-                      </div>
-                      <button className="text-teal-600 font-bold text-xs" onClick={() => setSelectedListing(item)}>View</button>
-                   </div>
-                 ))}
-               </div>
+               
+               {savedListingsData.length > 0 ? (
+                 <div className="space-y-3">
+                   {savedListingsData.map(item => (
+                     <div key={item.id} className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-neutral-100 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
+                           <img src={item.image} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                           <h4 className="font-bold text-sm">{item.name}</h4>
+                           <span className="text-xs text-neutral-500">{item.location}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button className="text-red-500 p-2 bg-red-50 rounded-lg" onClick={() => toggleSave(item.id)}>
+                            <Heart size={16} className="fill-current"/>
+                          </button>
+                          <button className="text-teal-600 font-bold text-xs p-2 bg-teal-50 rounded-lg" onClick={() => setSelectedListing(item)}>View</button>
+                        </div>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="text-center py-8 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
+                   <Heart className="mx-auto text-neutral-300 mb-2" size={32} />
+                   <p className="text-sm text-neutral-500">No saved places yet.</p>
+                   <button onClick={() => setActiveTab('discover')} className="text-teal-600 text-xs font-bold mt-2">Go Explore</button>
+                 </div>
+               )}
              </div>
              
              <button className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
