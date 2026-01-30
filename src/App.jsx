@@ -3,7 +3,7 @@ import {
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
   ExternalLink, LogOut, ArrowLeft, ShieldCheck, Clock, Phone, Globe, Bookmark,
-  Trophy, Settings
+  Trophy, Settings, QrCode, Edit3, Power, Bell, Filter
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -26,6 +26,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 /**
  * MOCK DATABASE
  */
+const CATEGORIES = [
+  { id: 'all', label: 'All', icon: '🌴' },
+  { id: 'food', label: 'Eat & Drink', icon: '🍹' },
+  { id: 'adventure', label: 'Adventure', icon: '🧗' },
+  { id: 'culture', label: 'Culture', icon: '🥁' },
+  { id: 'stay', label: 'Stays', icon: '🏡' },
+];
+
 const LISTINGS = [
   {
     id: 1,
@@ -184,38 +192,138 @@ const App = () => {
   const [mode, setMode] = useState('traveler');
   const [activeTab, setActiveTab] = useState('discover');
   const [selectedListing, setSelectedListing] = useState(null);
+  
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  // Business State
+  const [isBusinessOpen, setIsBusinessOpen] = useState(true);
+  const [specialOffer, setSpecialOffer] = useState("Free Rum Punch with Entry");
+  const [showQR, setShowQR] = useState(false);
+
+  // --- FILTER LOGIC ---
+  const filteredListings = LISTINGS.filter(item => {
+    // 1. Check Category
+    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    
+    // 2. Check Search Text (Name or Location)
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
 
   // -- BUSINESS OWNER VIEW --
   if (mode === 'business') {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
         <ViewToggle mode={mode} setMode={setMode} />
-        <header className="bg-white px-6 py-6 border-b border-slate-200">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-slate-800">My Business</h1>
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">JB</div>
+        
+        {/* Header */}
+        <header className="bg-white px-6 pt-6 pb-8 border-b border-slate-200 rounded-b-3xl shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-slate-800">Command Center</h1>
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border-2 border-orange-50">JB</div>
           </div>
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
-            <h3 className="text-orange-800 font-bold text-sm mb-1">Founding Member Status</h3>
-            <p className="text-orange-700 text-xs mb-3">You are verified as an early adopter.</p>
-            <button className="w-full bg-orange-500 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center">
-              <ExternalLink size={12} className="mr-2" /> Share Registration Link
-            </button>
+
+          {/* Live Status Toggle */}
+          <div className={`p-1 rounded-2xl flex items-center justify-between border transition-colors ${isBusinessOpen ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+             <div className="flex items-center px-4 py-3">
+               <div className={`w-3 h-3 rounded-full mr-3 ${isBusinessOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+               <div>
+                 <div className="text-xs font-bold uppercase tracking-wide opacity-60">Current Status</div>
+                 <div className="font-bold text-lg">{isBusinessOpen ? 'Open for Business' : 'Currently Closed'}</div>
+               </div>
+             </div>
+             <button 
+               onClick={() => setIsBusinessOpen(!isBusinessOpen)}
+               className="bg-white shadow-sm p-3 rounded-xl m-1 hover:bg-slate-50 transition-colors"
+             >
+               <Power size={20} className={isBusinessOpen ? 'text-green-600' : 'text-red-600'} />
+             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-              <span className="text-xs text-slate-500 font-medium uppercase">Bookings</span>
-              <div className="text-2xl font-bold mt-1 text-slate-800">142</div>
+        </header>
+
+        <main className="p-6 space-y-6">
+          
+          {/* Quick Actions Grid */}
+          <div>
+            <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setShowQR(true)}
+                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
+              >
+                <QrCode className="text-orange-500" size={28} />
+                <span className="text-sm font-bold">Show QR Code</span>
+              </button>
+              <button className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95">
+                <Edit3 className="text-blue-500" size={28} />
+                <span className="text-sm font-bold">Edit Listing</span>
+              </button>
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-              <span className="text-xs text-slate-500 font-medium uppercase">Revenue</span>
+          </div>
+
+          {/* Today's Special Editor */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+             <div className="flex justify-between items-start mb-3">
+               <h3 className="font-bold text-slate-800 flex items-center"><Bell size={16} className="mr-2 text-orange-500"/> Today's Flash Offer</h3>
+               <span className="text-xs text-slate-400">Visible to 200+ users</span>
+             </div>
+             <textarea 
+               value={specialOffer}
+               onChange={(e) => setSpecialOffer(e.target.value)}
+               className="w-full bg-slate-50 rounded-xl p-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2"
+               rows={2}
+             />
+             <button className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold">Update Offer</button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-100 p-4 rounded-2xl">
+              <span className="text-xs text-slate-500 font-medium uppercase">Profile Views</span>
+              <div className="text-2xl font-bold mt-1 text-slate-800">142</div>
+              <div className="text-xs text-green-600 flex items-center mt-1"><TrendingUp size={12} className="mr-1"/> +12%</div>
+            </div>
+            <div className="bg-slate-100 p-4 rounded-2xl">
+              <span className="text-xs text-slate-500 font-medium uppercase">Est. Revenue</span>
               <div className="text-2xl font-bold mt-1 text-slate-800">$4,250</div>
             </div>
           </div>
-        </header>
-        <main className="p-6">
-           <p className="text-slate-500 text-center text-sm">Dashboard features coming in Phase 2.</p>
+
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+             <div className="relative z-10">
+               <h3 className="font-bold text-lg mb-2">Recovery Badge</h3>
+               <p className="text-slate-300 text-sm mb-4">You are verified as a Founding Member.</p>
+               <button className="bg-white/10 backdrop-blur border border-white/20 text-white px-4 py-2 rounded-lg text-xs font-bold">View Certificate</button>
+             </div>
+             <Award className="absolute -bottom-4 -right-4 text-white/5 w-32 h-32" />
+          </section>
         </main>
+
+        {/* QR Code Modal */}
+        {showQR && (
+          <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setShowQR(false)}>
+             <div className="bg-white w-full max-w-sm rounded-3xl p-8 text-center relative animate-in zoom-in-50 duration-200" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl border-4 border-white shadow-lg -mt-16">JB</div>
+                <h3 className="text-2xl font-bold mb-1">Scan to Verify</h3>
+                <p className="text-slate-500 text-sm mb-6">Show this to scouts or tourists.</p>
+                
+                <div className="bg-slate-900 p-6 rounded-2xl mb-6 inline-block shadow-xl">
+                   <QrCode size={160} className="text-white" />
+                </div>
+                
+                <button 
+                  onClick={() => setShowQR(false)}
+                  className="w-full py-3 bg-slate-100 text-slate-900 font-bold rounded-xl"
+                >
+                  Close
+                </button>
+             </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -255,45 +363,83 @@ const App = () => {
               <h1 className="text-3xl font-bold leading-tight text-neutral-800">Wah Gwaan, <br/><span className="text-teal-600">Ready to explore?</span></h1>
               <div className="relative">
                 <Search className="absolute left-4 top-3.5 text-neutral-400" size={20} />
-                <input type="text" placeholder="Try 'Waterfalls near Ocho Rios'..." className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl shadow-sm border border-neutral-200 focus:outline-none focus:border-teal-500" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Try 'Jerk' or 'Kingston'..." 
+                  className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl shadow-sm border border-neutral-200 focus:outline-none focus:border-teal-500" 
+                />
+              </div>
+              
+              {/* Category Filter */}
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {CATEGORIES.map(cat => (
+                  <button 
+                    key={cat.id} 
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm whitespace-nowrap active:scale-95 transition-all
+                      ${activeCategory === cat.id ? 'bg-teal-600 text-white border-teal-600' : 'bg-white border-neutral-200 text-neutral-700'}
+                    `}
+                  >
+                    <span>{cat.icon}</span><span className="font-bold text-sm">{cat.label}</span>
+                  </button>
+                ))}
               </div>
             </section>
 
             <section>
               <div className="flex justify-between items-end mb-4">
                 <h2 className="text-xl font-bold text-neutral-800">Support Recovery ❤️</h2>
+                {activeCategory !== 'all' && (
+                   <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Filtering by {CATEGORIES.find(c => c.id === activeCategory)?.label}</span>
+                )}
               </div>
               
-              <div className="space-y-4">
-                {LISTINGS.map(item => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => setSelectedListing(item)}
-                    className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              {filteredListings.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredListings.map(item => (
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedListing(item)}
+                      className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    >
+                      <div className="h-48 bg-neutral-200 relative">
+                        <img src={item.image} className="w-full h-full object-cover"/>
+                        {item.impact_badge && (
+                          <div className="absolute bottom-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">REBUILDING PARTNER</div>
+                        )}
+                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold flex items-center shadow-sm">
+                          <Star size={12} className="text-yellow-500 fill-current mr-1" /> {item.rating}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>
+                        <div className="flex items-center text-neutral-500 text-xs mb-3">
+                           <MapPin size={12} className="mr-1" /> {item.location}
+                        </div>
+                        <p className="text-sm text-neutral-600 line-clamp-2 mb-4">{item.description}</p>
+                        <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
+                          <span className="text-sm font-bold text-neutral-900">{item.price}</span>
+                          <span className="text-teal-600 text-sm font-bold flex items-center">View Details <ArrowLeft size={16} className="rotate-180 ml-1"/></span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 opacity-60">
+                  <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🧐</div>
+                  <h3 className="font-bold text-lg">No places found</h3>
+                  <p className="text-sm">Try searching for something else or clear your filters.</p>
+                  <button 
+                    onClick={() => {setSearchQuery(''); setActiveCategory('all');}}
+                    className="mt-4 text-teal-600 font-bold text-sm"
                   >
-                    <div className="h-48 bg-neutral-200 relative">
-                      <img src={item.image} className="w-full h-full object-cover"/>
-                      {item.impact_badge && (
-                        <div className="absolute bottom-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">REBUILDING PARTNER</div>
-                      )}
-                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold flex items-center shadow-sm">
-                        <Star size={12} className="text-yellow-500 fill-current mr-1" /> {item.rating}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>
-                      <div className="flex items-center text-neutral-500 text-xs mb-3">
-                         <MapPin size={12} className="mr-1" /> {item.location}
-                      </div>
-                      <p className="text-sm text-neutral-600 line-clamp-2 mb-4">{item.description}</p>
-                      <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
-                        <span className="text-sm font-bold text-neutral-900">{item.price}</span>
-                        <span className="text-teal-600 text-sm font-bold flex items-center">View Details <ArrowLeft size={16} className="rotate-180 ml-1"/></span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    Clear Filters
+                  </button>
+                </div>
+              )}
             </section>
           </>
         )}
