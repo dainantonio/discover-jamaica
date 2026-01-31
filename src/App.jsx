@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
@@ -6,7 +6,8 @@ import {
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
   CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
-  Map as MapIcon, Sun, DollarSign, Plane, Ticket, Send, Layers, Download, CreditCard, Crown
+  Map as MapIcon, Sun, DollarSign, Plane, Ticket, Send, Layers, Download, CreditCard, Crown,
+  ToggleLeft, ToggleRight
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -63,7 +64,8 @@ const INITIAL_LISTINGS = [
     region: 'southcoast',
     rating: 5.0,
     reviews: 18,
-    price: '$40',
+    price: 40, // Numeric for conversion
+    priceLabel: "$40", 
     location: "Treasure Beach, St. Elizabeth",
     coordinates: [17.887, -77.771],
     image: "https://images.unsplash.com/photo-1605218427360-36390f8584af?auto=format&fit=crop&q=80&w=800",
@@ -84,7 +86,8 @@ const INITIAL_LISTINGS = [
     region: 'montegobay',
     rating: 5.0,
     reviews: 42,
-    price: '$30+',
+    price: 30,
+    priceLabel: "$30+",
     location: "Sangster Intl Airport (MBJ)",
     coordinates: [18.476, -77.92], 
     image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", 
@@ -105,7 +108,8 @@ const INITIAL_LISTINGS = [
     region: 'kingston',
     rating: 4.9,
     reviews: 15,
-    price: '$25+',
+    price: 25,
+    priceLabel: "$25+",
     location: "Norman Manley Intl (KIN)",
     coordinates: [17.936, -76.779],
     image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
@@ -126,7 +130,8 @@ const INITIAL_LISTINGS = [
     region: 'ochorios',
     rating: 4.8,
     reviews: 1240,
-    price: '$$',
+    price: 0, // 0 indicates variable pricing
+    priceLabel: "$$",
     location: "Ocho Rios, St. Ann",
     coordinates: [18.405, -77.103],
     image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
@@ -147,7 +152,8 @@ const INITIAL_LISTINGS = [
     region: 'montegobay',
     rating: 4.9,
     reviews: 3500,
-    price: '$',
+    price: 0,
+    priceLabel: "$",
     location: "Montego Bay, St. James",
     coordinates: [18.504, -77.896],
     image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=800",
@@ -168,7 +174,8 @@ const INITIAL_LISTINGS = [
     region: 'kingston',
     rating: 4.7,
     reviews: 2100,
-    price: '$$$',
+    price: 0,
+    priceLabel: "$$$",
     location: "Kingston 6",
     coordinates: [18.019, -76.783],
     image: "https://images.unsplash.com/photo-1550418290-b8d86e8a8b1c?auto=format&fit=crop&q=80&w=800",
@@ -189,7 +196,8 @@ const INITIAL_LISTINGS = [
     region: 'negril',
     rating: 4.6,
     reviews: 5400,
-    price: '$$',
+    price: 0,
+    priceLabel: "$$",
     location: "West End, Negril",
     coordinates: [18.250, -78.366],
     image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
@@ -210,7 +218,8 @@ const INITIAL_LISTINGS = [
     region: 'portantonio',
     rating: 4.8,
     reviews: 890,
-    price: '$$',
+    price: 0,
+    priceLabel: "$$",
     location: "Port Antonio, Portland",
     coordinates: [18.170, -76.388],
     image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
@@ -249,6 +258,15 @@ const createEmojiIcon = (category) => {
     iconAnchor: [20, 40],
     popupAnchor: [0, -40]
   });
+};
+
+// --- HELPER: FORMAT PRICE ---
+const formatPrice = (item, currency) => {
+  if (item.price === 0) return item.priceLabel; // Return "$$" or "$" if no specific price
+  if (currency === 'JMD') {
+    return `J$${(item.price * 155).toLocaleString()}`; // Approx rate
+  }
+  return `$${item.price} USD`;
 };
 
 // --- SUB-COMPONENTS ---
@@ -342,7 +360,67 @@ const SafetyModal = ({ onClose }) => (
   </div>
 );
 
-// --- NEW COMPONENT: AR VIEWER (SIMULATED) ---
+// --- NEW COMPONENT: SETTINGS MODAL ---
+const SettingsModal = ({ onClose, currency, setCurrency, investorMode, setInvestorMode }) => {
+  return (
+    <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden relative">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:text-black">
+          <X size={20} />
+        </button>
+        
+        <div className="p-6 border-b border-slate-100">
+          <h2 className="text-2xl font-bold text-slate-900">App Settings</h2>
+          <p className="text-slate-500 text-xs">Configure your DiscoverJA experience.</p>
+        </div>
+
+        <div className="p-6 space-y-6">
+          
+          {/* Currency Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-teal-100 p-2 rounded-full text-teal-600"><DollarSign size={20}/></div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">Currency</h3>
+                <p className="text-xs text-slate-500">Show prices in JMD</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setCurrency(currency === 'USD' ? 'JMD' : 'USD')}
+              className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${currency === 'JMD' ? 'bg-teal-600' : 'bg-slate-300'}`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${currency === 'JMD' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            </button>
+          </div>
+
+          {/* Investor Mode Toggle */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-100 p-2 rounded-full text-indigo-600"><TrendingUp size={20}/></div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">Investor Demo Mode</h3>
+                <p className="text-xs text-slate-500">Inflate metrics for pitch</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setInvestorMode(!investorMode)}
+              className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${investorMode ? 'bg-indigo-600' : 'bg-slate-300'}`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${investorMode ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            </button>
+          </div>
+
+          <div className="text-center pt-4">
+            <p className="text-[10px] text-slate-400 font-medium">Version 1.2.0 • Built with ❤️ in Jamaica</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- AR VIEWER (SIMULATED) ---
 const ARViewer = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[6000] bg-black text-white">
@@ -401,7 +479,7 @@ const ARViewer = ({ onClose }) => {
   );
 };
 
-// --- NEW COMPONENT: UPGRADE/MONETIZATION MODAL ---
+// --- UPGRADE MODAL ---
 const UpgradeModal = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in zoom-in-95 duration-200">
@@ -459,7 +537,7 @@ const UpgradeModal = ({ onClose }) => {
   );
 };
 
-// --- NEW COMPONENT: SOCIAL MAKER (BUSINESS) ---
+// --- SOCIAL MAKER (BUSINESS) ---
 const SocialMakerModal = ({ listing, onClose }) => {
   const [template, setTemplate] = useState('open'); // open, special, event
   const [customText, setCustomText] = useState(listing.name);
@@ -530,8 +608,8 @@ const SocialMakerModal = ({ listing, onClose }) => {
   );
 };
 
-// --- NEW COMPONENT: TRIP PLANNER ---
-const TripPlanner = ({ listings }) => {
+// --- TRIP PLANNER ---
+const TripPlanner = ({ listings, currency }) => {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -541,7 +619,7 @@ const TripPlanner = ({ listings }) => {
     setTimeout(() => {
       setTrip({
         name: "Eco-Discovery Weekend",
-        totalCost: "$120",
+        totalCost: currency === 'USD' ? "$120" : "J$18,600",
         days: [
           {
             day: 1,
@@ -617,7 +695,7 @@ const TripPlanner = ({ listings }) => {
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-slate-800">{act.name}</h4>
-                    <span className="text-xs text-slate-500">{act.category} • {act.price}</span>
+                    <span className="text-xs text-slate-500">{act.category} • {formatPrice(act, currency)}</span>
                   </div>
                 </div>
               ))}
@@ -633,7 +711,7 @@ const TripPlanner = ({ listings }) => {
   );
 };
 
-// --- NEW COMPONENT: CREATE LISTING ---
+// --- CREATE LISTING ---
 const CreateListingModal = ({ onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -784,7 +862,7 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
   );
 };
 
-const DetailView = ({ item, reviews, onBack, isSaved, onToggleSave, onCheckIn, onAddReview }) => {
+const DetailView = ({ item, reviews, onBack, isSaved, onToggleSave, onCheckIn, onAddReview, currency }) => {
   const [activeTab, setActiveTab] = useState('about');
   const [booked, setBooked] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -1007,22 +1085,25 @@ const DetailView = ({ item, reviews, onBack, isSaved, onToggleSave, onCheckIn, o
 
       {/* Booking Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-neutral-200 z-[2000] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-         <div className="max-w-md mx-auto">
+         <div className="max-w-md mx-auto flex items-center justify-between">
+            <div className="text-xs text-neutral-500">
+              <span className="block font-bold text-neutral-900 text-lg">{formatPrice(item, currency)}</span>
+              {item.category === 'experience' ? 'per person' : 'est. total'}
+            </div>
             {booked ? (
-              <div className="bg-green-100 text-green-800 p-3 rounded-xl text-center font-bold flex flex-col items-center border border-green-200">
+              <div className="bg-green-100 text-green-800 px-6 py-3 rounded-xl text-center font-bold flex flex-col items-center border border-green-200">
                  <div className="flex items-center gap-2">
                    <Check size={20} />
-                   <span>WhatsApp Opened!</span>
+                   <span>Opened!</span>
                  </div>
-                 <span className="text-[10px] font-normal opacity-80">Check your other tab to chat.</span>
               </div>
             ) : (
               <button 
                 onClick={handleBooking}
-                className="w-full bg-[#25D366] text-white py-3.5 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center hover:bg-[#20bd5a]"
+                className="bg-[#25D366] text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex justify-center items-center hover:bg-[#20bd5a]"
               >
-                <Phone size={20} className="mr-2" />
-                {item.category === 'experience' ? 'Request Class Spot' : 'Book via WhatsApp'}
+                <Phone size={18} className="mr-2" />
+                Book Now
               </button>
             )}
          </div>
@@ -1031,12 +1112,11 @@ const DetailView = ({ item, reviews, onBack, isSaved, onToggleSave, onCheckIn, o
   );
 };
 
-// --- NEW COMPONENT: LANDING / GATEWAY ---
+// --- LANDING PAGE ---
 const LandingPage = ({ onSelectRole }) => {
   return (
     <div className="fixed inset-0 z-[5000] bg-teal-700 text-white flex flex-col animate-in fade-in duration-500">
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-        {/* Background Decorative Blobs */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 translate-y-1/2"></div>
         
@@ -1074,7 +1154,6 @@ const LandingPage = ({ onSelectRole }) => {
           </div>
         </div>
       </div>
-      
       <div className="p-6 text-center">
         <p className="text-[10px] text-teal-300/60 uppercase tracking-widest font-bold">Made with ❤️ for Jamaica</p>
       </div>
@@ -1085,16 +1164,15 @@ const LandingPage = ({ onSelectRole }) => {
 // --- MAIN COMPONENT ---
 
 const App = () => {
-  // APP STATE
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [mode, setMode] = useState('traveler'); // 'traveler' or 'business'
+  const [mode, setMode] = useState('traveler'); 
   const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [showAR, setShowAR] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   
-  // NAVIGATION STATE
   const [activeTab, setActiveTab] = useState('discover');
   
-  // DATA STATE - NOW WITH LOCAL STORAGE PERSISTENCE
+  // Data State
   const [listings, setListings] = useState(() => {
     const saved = localStorage.getItem('discoverja_listings');
     return saved ? JSON.parse(saved) : INITIAL_LISTINGS;
@@ -1115,7 +1193,11 @@ const App = () => {
     return saved ? parseInt(saved) : 150;
   });
 
-  // PERSISTENCE EFFECTS
+  // Settings State
+  const [currency, setCurrency] = useState('USD');
+  const [investorMode, setInvestorMode] = useState(false);
+
+  // Persistence
   useEffect(() => { localStorage.setItem('discoverja_listings', JSON.stringify(listings)); }, [listings]);
   useEffect(() => { localStorage.setItem('discoverja_reviews', JSON.stringify(reviews)); }, [reviews]);
   useEffect(() => { localStorage.setItem('discoverja_saved', JSON.stringify(savedIds)); }, [savedIds]);
@@ -1123,20 +1205,18 @@ const App = () => {
 
   const [selectedListing, setSelectedListing] = useState(null);
   
-  // User State
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [activeRegion, setActiveRegion] = useState('all'); // Region Filter
+  const [activeRegion, setActiveRegion] = useState('all');
 
-  // Business Owner State
+  // Business State
   const [isBusinessOpen, setIsBusinessOpen] = useState(true);
   const [showQR, setShowQR] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false); // NEW
-
-  // --- HANDLERS ---
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleRoleSelection = (selectedRole) => {
     setMode(selectedRole);
@@ -1149,7 +1229,6 @@ const App = () => {
     setActiveTab('discover');
   };
 
-  // Toggle Favorites
   const toggleSave = (id) => {
     if (savedIds.includes(id)) {
       setSavedIds(savedIds.filter(itemId => itemId !== id));
@@ -1163,7 +1242,7 @@ const App = () => {
       setPoints(points - cost);
       alert("Reward Redeemed! Show this to the cashier.");
     } else {
-      alert("Not enough points! Visit more places to earn stamps.");
+      alert("Not enough points!");
     }
   };
 
@@ -1172,12 +1251,11 @@ const App = () => {
     alert("Check-in confirmed! You earned 10 Points.");
   };
 
-  // Add Review
   const handleAddReview = (listingId, rating, text) => {
     const newReview = {
       id: Date.now(),
       listingId,
-      user: "Traveler", // Simulating logged in user
+      user: "Traveler",
       text,
       rating,
       date: "Just now"
@@ -1185,10 +1263,8 @@ const App = () => {
     setReviews([newReview, ...reviews]);
   };
 
-  // View Listing (Analytics)
   const handleViewListing = (item) => {
     setSelectedListing(item);
-    // Increment view count for the listing
     const updatedListings = listings.map(l => {
       if (l.id === item.id) {
         return { ...l, views: (l.views || 0) + 1 };
@@ -1198,47 +1274,43 @@ const App = () => {
     setListings(updatedListings);
   };
 
-  // Filter Logic
   const filteredListings = listings.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const matchesRegion = activeRegion === 'all' || (item.region && item.region === activeRegion);
-    
     const query = searchQuery.toLowerCase();
     const matchesSearch = item.name.toLowerCase().includes(query) || 
                           item.location.toLowerCase().includes(query) ||
                           item.description.toLowerCase().includes(query) ||
                           item.category.toLowerCase().includes(query);
-    
     return matchesCategory && matchesRegion && matchesSearch;
   });
 
-  // Get Saved Listings for Profile
   const savedListingsData = listings.filter(item => savedIds.includes(item.id));
 
-  // Handle Edit Save
   const handleEditSave = (updatedListing) => {
     const updatedListings = listings.map(l => l.id === updatedListing.id ? updatedListing : l);
     setListings(updatedListings);
     setShowEditModal(false);
   };
 
-  // Handle Create Listing
   const handleCreateSave = (newListing) => {
     setListings([...listings, newListing]);
     setShowCreateModal(false);
     alert("Listing Created! Switch to 'Traveler' mode to see it.");
   };
 
-  // --- RENDER ---
-
   if (!isAuthenticated) {
     return <LandingPage onSelectRole={handleRoleSelection} />;
   }
 
-  // 2. BUSINESS OWNER VIEW
+  // --- BUSINESS OWNER VIEW ---
   if (mode === 'business') {
-    const myListing = listings[0]; // Currently managing P&T MoBay
+    const myListing = listings[0];
     const myReviews = reviews.filter(r => r.listingId === myListing.id);
+    
+    // Investor Mode Stats Injection
+    const displayViews = investorMode ? (myListing.views || 0) * 125 : (myListing.views || 0);
+    const displayReviews = investorMode ? myReviews.length + 850 : myReviews.length;
 
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 animate-in fade-in duration-300">
@@ -1269,8 +1341,6 @@ const App = () => {
         </header>
 
         <main className="p-6 space-y-6">
-          
-          {/* UPGRADE BANNER */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-4 text-white flex justify-between items-center shadow-lg">
             <div>
               <h3 className="font-bold text-sm">Upgrade to Premium</h3>
@@ -1294,63 +1364,42 @@ const App = () => {
              </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-slate-100 p-4 rounded-2xl">
               <span className="text-xs text-slate-500 font-medium uppercase">Profile Views</span>
-              <div className="text-2xl font-bold mt-1 text-slate-800">{myListing.views || 0}</div>
+              <div className="text-2xl font-bold mt-1 text-slate-800">{displayViews}</div>
               <div className="text-xs text-green-600 flex items-center mt-1"><TrendingUp size={12} className="mr-1"/> Live</div>
             </div>
             <div className="bg-slate-100 p-4 rounded-2xl">
               <span className="text-xs text-slate-500 font-medium uppercase">Total Reviews</span>
-              <div className="text-2xl font-bold mt-1 text-slate-800">{myReviews.length}</div>
+              <div className="text-2xl font-bold mt-1 text-slate-800">{displayReviews}</div>
             </div>
           </div>
 
-          <div>
-            <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => setShowQR(true)}
-                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
-              >
+          <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setShowQR(true)} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95">
                 <QrCode className="text-orange-500" size={28} />
                 <span className="text-sm font-bold">Show QR Code</span>
               </button>
-              <button 
-                onClick={() => setShowEditModal(true)}
-                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
-              >
+              <button onClick={() => setShowEditModal(true)} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95">
                 <Edit3 className="text-blue-500" size={28} />
                 <span className="text-sm font-bold">Edit Listing</span>
               </button>
-              
-              <button 
-                onClick={() => setShowSocialModal(true)} 
-                className="p-4 bg-indigo-600 text-white rounded-2xl border border-indigo-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
-              >
+              <button onClick={() => setShowSocialModal(true)} className="p-4 bg-indigo-600 text-white rounded-2xl border border-indigo-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95">
                 <Layers className="text-white" size={28} />
                 <span className="text-sm font-bold">Social Maker</span>
               </button>
-
-              <button 
-                onClick={() => setShowCreateModal(true)} 
-                className="p-4 bg-orange-600 text-white rounded-2xl border border-orange-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-orange-700 hover:shadow-md transition-all active:scale-95"
-              >
+              <button onClick={() => setShowCreateModal(true)} className="p-4 bg-orange-600 text-white rounded-2xl border border-orange-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-orange-700 hover:shadow-md transition-all active:scale-95">
                 <PlusCircle className="text-white" size={28} />
                 <span className="text-sm font-bold">New Listing</span>
               </button>
-            </div>
           </div>
 
-          <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
-             <div className="relative z-10">
-               <h3 className="font-bold text-lg mb-2">Recovery Badge</h3>
-               <p className="text-slate-300 text-sm mb-4">You are verified as a Founding Member.</p>
-               <button className="bg-white/10 backdrop-blur border border-white/20 text-white px-4 py-2 rounded-lg text-xs font-bold">View Certificate</button>
-             </div>
-             <Award className="absolute -bottom-4 -right-4 text-white/5 w-32 h-32" />
-          </section>
+          <div className="mt-8 flex justify-center">
+             <button onClick={() => setShowSettingsModal(true)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-slate-600">
+               <Settings size={12}/> App Settings & Demo Mode
+             </button>
+          </div>
         </main>
 
         {showQR && (
@@ -1372,9 +1421,7 @@ const App = () => {
                      <button className="py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-100">
                        <Printer size={16} className="mr-2" /> Print PDF
                      </button>
-                     <button onClick={() => setShowQR(false)} className="py-3 bg-black text-white rounded-xl text-xs font-bold">
-                       Done
-                     </button>
+                     <button onClick={() => setShowQR(false)} className="py-3 bg-black text-white rounded-xl text-xs font-bold">Done</button>
                    </div>
                 </div>
              </div>
@@ -1382,29 +1429,15 @@ const App = () => {
         )}
 
         {showSocialModal && <SocialMakerModal listing={myListing} onClose={() => setShowSocialModal(false)} />}
-        
-        {/* NEW UPGRADE MODAL */}
         {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
-
-        {showEditModal && (
-          <EditListingModal 
-            listing={myListing} 
-            onClose={() => setShowEditModal(false)} 
-            onSave={handleEditSave} 
-          />
-        )}
-
-        {showCreateModal && (
-          <CreateListingModal 
-            onClose={() => setShowCreateModal(false)}
-            onSave={handleCreateSave}
-          />
-        )}
+        {showEditModal && <EditListingModal listing={myListing} onClose={() => setShowEditModal(false)} onSave={handleEditSave} />}
+        {showCreateModal && <CreateListingModal onClose={() => setShowCreateModal(false)} onSave={handleCreateSave} />}
+        {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} currency={currency} setCurrency={setCurrency} investorMode={investorMode} setInvestorMode={setInvestorMode} />}
       </div>
     );
   }
 
-  // 3. TRAVELER VIEW
+  // --- TRAVELER VIEW ---
   
   if (selectedListing) {
     return (
@@ -1416,62 +1449,37 @@ const App = () => {
         onToggleSave={toggleSave}
         onCheckIn={handleCheckIn}
         onAddReview={handleAddReview}
+        currency={currency}
       />
     );
   }
 
   return (
     <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 pb-24 animate-in fade-in duration-300">
-      
-      {/* Top Bar */}
       <header className="sticky top-0 bg-white/95 backdrop-blur-md z-[900] px-4 py-3 flex items-center justify-between border-b border-neutral-100 shadow-sm">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">J</div>
           <span className="font-bold text-lg tracking-tight">Discover<span className="text-teal-600">JA</span></span>
         </div>
-        
-        {/* ALERT BUTTONS */}
         <div className="flex gap-2">
-          {/* AR LENS BUTTON */}
-          <button 
-            onClick={() => setShowAR(true)}
-            className="bg-indigo-600 p-2 rounded-full text-white hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Camera size={18} />
-          </button>
-
-          <button className="bg-slate-100 p-2 rounded-full text-slate-500 hover:text-black">
-            <Bell size={18} />
-          </button>
-          <button 
-            onClick={() => setShowSafetyModal(true)}
-            className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold border border-red-100"
-          >
-            <ShieldAlert size={14} /> Safety
-          </button>
+          <button onClick={() => setShowAR(true)} className="bg-indigo-600 p-2 rounded-full text-white hover:bg-indigo-700 transition-colors shadow-sm"><Camera size={18} /></button>
+          <button className="bg-slate-100 p-2 rounded-full text-slate-500 hover:text-black"><Bell size={18} /></button>
+          <button onClick={() => setShowSafetyModal(true)} className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold border border-red-100"><ShieldAlert size={14} /> Safety</button>
         </div>
       </header>
 
       <main className="px-4 py-6 space-y-8">
-        
-        {/* LIVE ALERT TICKER */}
         <div className="bg-slate-900 text-white p-3 rounded-xl flex items-center gap-3 shadow-md overflow-hidden relative">
            <div className="bg-red-500 p-1.5 rounded-lg animate-pulse"><ShieldAlert size={14} className="text-white"/></div>
            <div className="flex-1 overflow-hidden">
              <div className="text-xs font-bold flex gap-4 animate-marquee whitespace-nowrap">
-               {SAFETY_ALERTS.map(alert => (
-                 <span key={alert.id} className="flex items-center gap-2">
-                   {alert.icon} {alert.text}
-                 </span>
-               ))}
+               {SAFETY_ALERTS.map(alert => <span key={alert.id} className="flex items-center gap-2">{alert.icon} {alert.text}</span>)}
              </div>
            </div>
         </div>
 
-        {/* --- DISCOVER TAB --- */}
         {activeTab === 'discover' && (
           <>
-            {/* ISLAND STORIES */}
             <div>
               <h3 className="font-bold text-sm text-slate-500 mb-3 uppercase tracking-wide">Live on Island</h3>
               <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
@@ -1492,42 +1500,16 @@ const App = () => {
               <h1 className="text-3xl font-bold leading-tight text-neutral-800">Wah Gwaan, <br/><span className="text-teal-600">Ready to explore?</span></h1>
               <div className="relative">
                 <Search className="absolute left-4 top-3.5 text-neutral-400" size={20} />
-                <input 
-                  type="text" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Try 'Jerk' or 'Kingston'..." 
-                  className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl shadow-sm border border-neutral-200 focus:outline-none focus:border-teal-500" 
-                />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Try 'Jerk' or 'Kingston'..." className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl shadow-sm border border-neutral-200 focus:outline-none focus:border-teal-500" />
               </div>
-              
-              {/* CATEGORY FILTER */}
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {CATEGORIES.map(cat => (
-                  <button 
-                    key={cat.id} 
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm whitespace-nowrap active:scale-95 transition-all
-                      ${activeCategory === cat.id ? 'bg-teal-600 text-white border-teal-600' : 'bg-white border-neutral-200 text-neutral-700'}
-                    `}
-                  >
-                    <span>{cat.icon}</span><span className="font-bold text-sm">{cat.label}</span>
-                  </button>
+                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm whitespace-nowrap active:scale-95 transition-all ${activeCategory === cat.id ? 'bg-teal-600 text-white border-teal-600' : 'bg-white border-neutral-200 text-neutral-700'}`}><span>{cat.icon}</span><span className="font-bold text-sm">{cat.label}</span></button>
                 ))}
               </div>
-
-              {/* NEW: REGION FILTER */}
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral-100/50">
                 {REGIONS.map(reg => (
-                  <button 
-                    key={reg.id} 
-                    onClick={() => setActiveRegion(reg.id)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all
-                      ${activeRegion === reg.id ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}
-                    `}
-                  >
-                    {reg.label}
-                  </button>
+                  <button key={reg.id} onClick={() => setActiveRegion(reg.id)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeRegion === reg.id ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{reg.label}</button>
                 ))}
               </div>
             </section>
@@ -1535,55 +1517,30 @@ const App = () => {
             <section>
               <div className="flex justify-between items-end mb-4">
                 <h2 className="text-xl font-bold text-neutral-800">Support Recovery ❤️</h2>
-                {activeCategory !== 'all' && (
-                   <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Filtering by {CATEGORIES.find(c => c.id === activeCategory)?.label}</span>
-                )}
+                {activeCategory !== 'all' && <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Filtering by {CATEGORIES.find(c => c.id === activeCategory)?.label}</span>}
               </div>
               
               {filteredListings.length > 0 ? (
                 <div className="space-y-4">
                   {filteredListings.map(item => (
-                    <div 
-                      key={item.id} 
-                      onClick={() => handleViewListing(item)}
-                      className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300 relative"
-                    >
+                    <div key={item.id} onClick={() => handleViewListing(item)} className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
                       <div className="h-48 bg-neutral-200 relative">
                         <img src={item.image} className="w-full h-full object-cover"/>
-                        {item.impact_badge && (
-                          <div className="absolute bottom-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">REBUILDING PARTNER</div>
-                        )}
-                        {item.special_offer && (
-                          <div className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm animate-pulse flex items-center">
-                            <Ticket size={10} className="mr-1"/> DEAL
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold flex items-center shadow-sm">
-                          <Star size={12} className="text-yellow-500 fill-current mr-1" /> {item.rating}
-                        </div>
+                        {item.impact_badge && <div className="absolute bottom-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">REBUILDING PARTNER</div>}
+                        {item.special_offer && <div className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm animate-pulse flex items-center"><Ticket size={10} className="mr-1"/> DEAL</div>}
+                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold flex items-center shadow-sm"><Star size={12} className="text-yellow-500 fill-current mr-1" /> {item.rating}</div>
                       </div>
                       <div className="p-4">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>
-                          {item.special_offer && <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Offer</span>}
-                        </div>
-                        <div className="flex items-center text-neutral-500 text-xs mb-3">
-                           <MapPin size={12} className="mr-1" /> {item.location}
-                        </div>
-                        {item.special_offer && (
-                          <p className="text-xs font-bold text-orange-600 mb-2">🔥 {item.special_offer}</p>
-                        )}
+                        <div className="flex justify-between items-start"><h3 className="font-bold text-lg text-neutral-800 mb-1">{item.name}</h3>{item.special_offer && <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Offer</span>}</div>
+                        <div className="flex items-center text-neutral-500 text-xs mb-3"><MapPin size={12} className="mr-1" /> {item.location}</div>
+                        {item.special_offer && <p className="text-xs font-bold text-orange-600 mb-2">🔥 {item.special_offer}</p>}
                         <p className="text-sm text-neutral-600 line-clamp-2 mb-4">{item.description}</p>
                         <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
-                          <span className="text-sm font-bold text-neutral-900">{item.price}</span>
+                          <span className="text-sm font-bold text-neutral-900">{formatPrice(item, currency)}</span>
                           <span className="text-teal-600 text-sm font-bold flex items-center">View Details <ArrowLeft size={16} className="rotate-180 ml-1"/></span>
                         </div>
                       </div>
-                      {savedIds.includes(item.id) && (
-                        <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10" style={{top: '3rem'}}>
-                          <Heart size={14} className="fill-red-500 text-red-500" />
-                        </div>
-                      )}
+                      {savedIds.includes(item.id) && <div className="absolute top-3 left-3 bg-white p-1.5 rounded-full shadow-md z-10" style={{top: '3rem'}}><Heart size={14} className="fill-red-500 text-red-500" /></div>}
                     </div>
                   ))}
                 </div>
@@ -1591,194 +1548,65 @@ const App = () => {
                 <div className="text-center py-10 opacity-60">
                   <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🧐</div>
                   <h3 className="font-bold text-lg">No places found</h3>
-                  <p className="text-sm">Try searching for something else or clear your filters.</p>
-                  <button 
-                    onClick={() => {setSearchQuery(''); setActiveCategory('all'); setActiveRegion('all');}}
-                    className="mt-4 text-teal-600 font-bold text-sm"
-                  >
-                    Clear Filters
-                  </button>
+                  <button onClick={() => {setSearchQuery(''); setActiveCategory('all'); setActiveRegion('all');}} className="mt-4 text-teal-600 font-bold text-sm">Clear Filters</button>
                 </div>
               )}
             </section>
           </>
         )}
 
-        {/* --- MAP TAB --- */}
         {activeTab === 'map' && (
           <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-neutral-200 shadow-sm relative z-0">
-             {/* Note: We use filteredListings here so the map updates with search */}
              <MapContainer center={[18.1096, -77.2975]} zoom={9} scrollWheelZoom={true} className="h-full w-full">
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                
+                <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <LocationMarker />
-
                 {filteredListings.map(item => (
-                   <Marker 
-                     key={item.id} 
-                     position={item.coordinates}
-                     icon={createEmojiIcon(item.category)}
-                   >
-                      <Popup>
-                         <div className="p-1 text-center">
-                            <h3 className="font-bold text-sm mb-1">{item.name}</h3>
-                            <button 
-                              onClick={() => handleViewListing(item)}
-                              className="text-xs bg-teal-600 text-white px-2 py-1 rounded"
-                            >
-                              View
-                            </button>
-                         </div>
-                      </Popup>
+                   <Marker key={item.id} position={item.coordinates} icon={createEmojiIcon(item.category)}>
+                      <Popup><div className="p-1 text-center"><h3 className="font-bold text-sm mb-1">{item.name}</h3><button onClick={() => handleViewListing(item)} className="text-xs bg-teal-600 text-white px-2 py-1 rounded">View</button></div></Popup>
                    </Marker>
                 ))}
              </MapContainer>
-             
-             {/* Floating Search in Map Mode */}
-             <div className="absolute top-4 left-4 right-4 z-[1000]">
-               <div className="relative shadow-lg">
-                  <Search className="absolute left-4 top-3.5 text-neutral-500" size={20} />
-                  <input 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Filter map..." 
-                    className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl focus:outline-none" 
-                  />
-               </div>
-             </div>
-
-             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-lg z-[1000]">
-                Showing {filteredListings.length} Verified Locations
-             </div>
+             <div className="absolute top-4 left-4 right-4 z-[1000]"><div className="relative shadow-lg"><Search className="absolute left-4 top-3.5 text-neutral-500" size={20} /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter map..." className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl focus:outline-none" /></div></div>
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-lg z-[1000]">Showing {filteredListings.length} Verified Locations</div>
           </div>
         )}
 
-        {/* --- TRIPS TAB (NEW) --- */}
-        {activeTab === 'trips' && (
-          <TripPlanner listings={listings} />
-        )}
+        {activeTab === 'trips' && <TripPlanner listings={listings} currency={currency} />}
 
-        {/* --- PROFILE TAB --- */}
         {activeTab === 'profile' && (
           <div className="space-y-6">
              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-20 h-20 bg-neutral-200 rounded-full border-4 border-white shadow-md overflow-hidden">
-                   <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover"/>
-                </div>
-                <div>
-                   <h2 className="text-2xl font-bold">Jamie S.</h2>
-                   <div className="flex items-center text-teal-600 font-bold text-sm bg-teal-50 px-2 py-1 rounded-md inline-block mt-1">
-                      <Award size={14} className="mr-1" /> Level 2 Scout
-                   </div>
-                </div>
+                <div className="w-20 h-20 bg-neutral-200 rounded-full border-4 border-white shadow-md overflow-hidden"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover"/></div>
+                <div><h2 className="text-2xl font-bold">Jamie S.</h2><div className="flex items-center text-teal-600 font-bold text-sm bg-teal-50 px-2 py-1 rounded-md inline-block mt-1"><Award size={14} className="mr-1" /> Level 2 Scout</div></div>
              </div>
-
-             {/* REWARDS STORE */}
              <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div className="relative z-10">
                    <div className="flex justify-between items-center mb-6">
-                     <div>
-                       <h3 className="font-bold text-lg flex items-center"><Gift size={18} className="mr-2 text-teal-400" /> Rewards Bazaar</h3>
-                       <p className="text-xs text-slate-400">Redeem your stamps for real perks.</p>
-                     </div>
-                     <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center">
-                       <Coins size={14} className="mr-2 text-yellow-400"/>
-                       <span className="font-bold">{points} pts</span>
-                     </div>
+                     <div><h3 className="font-bold text-lg flex items-center"><Gift size={18} className="mr-2 text-teal-400" /> Rewards Bazaar</h3><p className="text-xs text-slate-400">Redeem your stamps for real perks.</p></div>
+                     <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center"><Coins size={14} className="mr-2 text-yellow-400"/><span className="font-bold">{points} pts</span></div>
                    </div>
-
-                   <div className="space-y-3">
-                     {REWARDS.map(reward => (
-                       <div key={reward.id} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
-                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-lg">{reward.icon}</div>
-                           <div>
-                             <div className="font-bold text-sm">{reward.title}</div>
-                             <div className="text-[10px] text-slate-400">{reward.desc}</div>
-                           </div>
-                         </div>
-                         <button 
-                           onClick={() => redeemReward(reward.cost)}
-                           className="bg-teal-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-500"
-                         >
-                           {reward.cost} pts
-                         </button>
-                       </div>
-                     ))}
-                   </div>
+                   <div className="space-y-3">{REWARDS.map(reward => (<div key={reward.id} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-lg">{reward.icon}</div><div><div className="font-bold text-sm">{reward.title}</div><div className="text-[10px] text-slate-400">{reward.desc}</div></div></div><button onClick={() => redeemReward(reward.cost)} className="bg-teal-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-500">{reward.cost} pts</button></div>))}</div>
                 </div>
              </div>
-
              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div className="relative z-10">
-                   <h3 className="font-bold text-lg mb-4 flex items-center"><Trophy size={18} className="mr-2" /> Digital Passport</h3>
-                   <div className="grid grid-cols-4 gap-2">
-                      {STAMPS.map(stamp => (
-                        <div key={stamp.id} className={`aspect-square rounded-full flex flex-col items-center justify-center border-2 ${stamp.earned ? 'bg-white/20 border-white/40' : 'bg-black/20 border-white/10 opacity-50'}`}>
-                           <span className="text-xl mb-1">{stamp.icon}</span>
-                        </div>
-                      ))}
-                   </div>
-                   <p className="text-xs text-center mt-4 opacity-80 font-medium">Visit 2 more locations to unlock "Explorer"!</p>
-                </div>
+                <div className="relative z-10"><h3 className="font-bold text-lg mb-4 flex items-center"><Trophy size={18} className="mr-2" /> Digital Passport</h3><div className="grid grid-cols-4 gap-2">{STAMPS.map(stamp => (<div key={stamp.id} className={`aspect-square rounded-full flex flex-col items-center justify-center border-2 ${stamp.earned ? 'bg-white/20 border-white/40' : 'bg-black/20 border-white/10 opacity-50'}`}><span className="text-xl mb-1">{stamp.icon}</span></div>))}</div><p className="text-xs text-center mt-4 opacity-80 font-medium">Visit 2 more locations to unlock "Explorer"!</p></div>
              </div>
-
              <div>
                <h3 className="font-bold text-lg mb-4 flex items-center"><Bookmark size={18} className="mr-2" /> Saved Places</h3>
-               
-               {savedListingsData.length > 0 ? (
-                 <div className="space-y-3">
-                   {savedListingsData.map(item => (
-                     <div key={item.id} className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-neutral-100 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
-                           <img src={item.image} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1">
-                           <h4 className="font-bold text-sm">{item.name}</h4>
-                           <span className="text-xs text-neutral-500">{item.location}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="text-red-500 p-2 bg-red-50 rounded-lg" onClick={() => toggleSave(item.id)}>
-                            <Heart size={16} className="fill-current"/>
-                          </button>
-                          <button className="text-teal-600 font-bold text-xs p-2 bg-teal-50 rounded-lg" onClick={() => handleViewListing(item)}>View</button>
-                        </div>
-                     </div>
-                   ))}
-                 </div>
-               ) : (
-                 <div className="text-center py-8 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
-                   <Heart className="mx-auto text-neutral-300 mb-2" size={32} />
-                   <p className="text-sm text-neutral-500">No saved places yet.</p>
-                   <button onClick={() => setActiveTab('discover')} className="text-teal-600 text-xs font-bold mt-2">Go Explore</button>
-                 </div>
-               )}
+               {savedListingsData.length > 0 ? (<div className="space-y-3">{savedListingsData.map(item => (<div key={item.id} className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-neutral-100 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300"><div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden shrink-0"><img src={item.image} className="w-full h-full object-cover" /></div><div className="flex-1"><h4 className="font-bold text-sm">{item.name}</h4><span className="text-xs text-neutral-500">{item.location}</span></div><div className="flex gap-2"><button className="text-red-500 p-2 bg-red-50 rounded-lg" onClick={() => toggleSave(item.id)}><Heart size={16} className="fill-current"/></button><button className="text-teal-600 font-bold text-xs p-2 bg-teal-50 rounded-lg" onClick={() => handleViewListing(item)}>View</button></div></div>))}</div>) : (<div className="text-center py-8 bg-neutral-50 rounded-xl border border-dashed border-neutral-300"><Heart className="mx-auto text-neutral-300 mb-2" size={32} /><p className="text-sm text-neutral-500">No saved places yet.</p><button onClick={() => setActiveTab('discover')} className="text-teal-600 text-xs font-bold mt-2">Go Explore</button></div>)}
              </div>
-             
              <div className="pt-4 space-y-3">
-               <button onClick={() => {
-                 localStorage.clear();
-                 window.location.reload();
-               }} className="w-full py-3 border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center rounded-xl hover:bg-red-50 transition-colors">
-                 Reset Demo Data
-               </button>
-               
-               <button onClick={handleSignOut} className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors">
-                 <LogOut size={16} className="mr-2" /> Sign Out
-               </button>
+               <button onClick={() => setShowSettingsModal(true)} className="w-full py-3 bg-slate-100 text-slate-600 text-sm font-bold flex items-center justify-center rounded-xl hover:bg-slate-200 transition-colors"><Settings size={16} className="mr-2" /> App Settings</button>
+               <button onClick={() => {localStorage.clear(); window.location.reload();}} className="w-full py-3 border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center rounded-xl hover:bg-red-50 transition-colors">Reset Demo Data</button>
+               <button onClick={handleSignOut} className="w-full py-4 text-neutral-400 text-sm font-bold flex items-center justify-center hover:text-red-500 transition-colors"><LogOut size={16} className="mr-2" /> Sign Out</button>
              </div>
           </div>
         )}
-
       </main>
 
-      {/* GLOBAL MODALS */}
       {showSafetyModal && <SafetyModal onClose={() => setShowSafetyModal(false)} />}
       {showAR && <ARViewer onClose={() => setShowAR(false)} />}
+      {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} currency={currency} setCurrency={setCurrency} investorMode={investorMode} setInvestorMode={setInvestorMode} />}
 
       <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-[1000]">
         <div className="flex justify-between items-center max-w-sm mx-auto">
