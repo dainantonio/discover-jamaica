@@ -6,7 +6,7 @@ import {
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
   CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
-  Map as MapIcon, Sun, DollarSign, Plane, Ticket, Send, Layers, Download
+  Map as MapIcon, Sun, DollarSign, Plane, Ticket, Send, Layers, Download, CreditCard, Crown
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -395,6 +395,64 @@ const ARViewer = ({ onClose }) => {
           <p className="text-sm font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
             Point camera at landmarks to explore
           </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- NEW COMPONENT: UPGRADE/MONETIZATION MODAL ---
+const UpgradeModal = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in zoom-in-95 duration-200">
+      <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white">
+        <X size={32} />
+      </button>
+      
+      <div className="w-20 h-20 bg-gradient-to-tr from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white/20">
+        <Crown size={48} className="text-white" />
+      </div>
+      
+      <h2 className="text-3xl font-bold text-white mb-2">Upgrade Your Business</h2>
+      <p className="text-white/60 mb-8 text-center max-w-xs">Reach more tourists and unlock premium tools.</p>
+      
+      <div className="w-full max-w-sm space-y-4">
+        {/* FREE PLAN */}
+        <div className="bg-white/10 border border-white/20 p-5 rounded-2xl">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-white font-bold">Basic Listing</h3>
+            <span className="text-white/60 text-sm">Current</span>
+          </div>
+          <ul className="text-white/70 text-sm space-y-2">
+            <li className="flex gap-2"><Check size={14} className="text-teal-400"/> Standard Map Pin</li>
+            <li className="flex gap-2"><Check size={14} className="text-teal-400"/> Receive Bookings</li>
+          </ul>
+        </div>
+
+        {/* PRO PLAN */}
+        <div className="bg-white text-slate-900 p-5 rounded-2xl shadow-xl border-2 border-yellow-400 relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-3 py-1 rounded-bl-xl">POPULAR</div>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-bold text-lg">Premium Partner</h3>
+              <p className="text-slate-500 text-xs">For serious growth</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold">$20</span>
+              <span className="text-xs text-slate-500">/mo</span>
+            </div>
+          </div>
+          
+          <ul className="text-slate-700 text-sm space-y-3 mb-6">
+            <li className="flex gap-2 font-medium"><Check size={16} className="text-orange-500"/> Verified Gold Badge</li>
+            <li className="flex gap-2 font-medium"><Check size={16} className="text-orange-500"/> Top of Search Results</li>
+            <li className="flex gap-2 font-medium"><Check size={16} className="text-orange-500"/> Unlimited Social Maker</li>
+            <li className="flex gap-2 font-medium"><Check size={16} className="text-orange-500"/> Advanced Analytics</li>
+          </ul>
+
+          <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 active:scale-95 transition-transform">
+            <CreditCard size={18} /> Upgrade Now
+          </button>
         </div>
       </div>
     </div>
@@ -1076,6 +1134,7 @@ const App = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false); // NEW
 
   // --- HANDLERS ---
 
@@ -1210,6 +1269,21 @@ const App = () => {
         </header>
 
         <main className="p-6 space-y-6">
+          
+          {/* UPGRADE BANNER */}
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-4 text-white flex justify-between items-center shadow-lg">
+            <div>
+              <h3 className="font-bold text-sm">Upgrade to Premium</h3>
+              <p className="text-xs text-white/80">Get Verified Badge & More</p>
+            </div>
+            <button 
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-white text-orange-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm"
+            >
+              Upgrade
+            </button>
+          </div>
+
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
              <div className="w-16 h-16 bg-neutral-200 rounded-lg overflow-hidden shrink-0">
                <img src={myListing.image} className="w-full h-full object-cover" />
@@ -1251,7 +1325,6 @@ const App = () => {
                 <span className="text-sm font-bold">Edit Listing</span>
               </button>
               
-              {/* NEW SOCIAL MAKER BUTTON */}
               <button 
                 onClick={() => setShowSocialModal(true)} 
                 className="p-4 bg-indigo-600 text-white rounded-2xl border border-indigo-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
@@ -1309,6 +1382,9 @@ const App = () => {
         )}
 
         {showSocialModal && <SocialMakerModal listing={myListing} onClose={() => setShowSocialModal(false)} />}
+        
+        {/* NEW UPGRADE MODAL */}
+        {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
 
         {showEditModal && (
           <EditListingModal 
