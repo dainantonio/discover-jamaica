@@ -6,7 +6,7 @@ import {
   Trophy, Settings, QrCode, Edit3, Power, Bell, Filter, MessageCircle, Navigation,
   Locate, Save, ArrowRight, Briefcase, Printer, Car, ShieldAlert, PhoneCall,
   CloudRain, CalendarDays, Info, Gift, ShoppingBag, Coins, Zap, PlusCircle,
-  Map as MapIcon, Sun, DollarSign, Plane, Ticket
+  Map as MapIcon, Sun, DollarSign, Plane, Ticket, Send, Layers, Download
 } from 'lucide-react';
 
 // --- MAP IMPORTS ---
@@ -15,7 +15,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 /**
- * INITIAL DATA (Expanded Coverage)
+ * INITIAL DATA
  */
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: '🌴' },
@@ -74,7 +74,8 @@ const INITIAL_LISTINGS = [
     amenities: ["2 Hours", "Materials Included", "Tea Served", "Family Friendly"],
     impact_badge: true,
     whatsapp: "18765559999",
-    special_offer: null
+    special_offer: null,
+    views: 124
   },
   {
     id: 0,
@@ -94,7 +95,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Private AC Vehicle", "Flight Tracking", "Grocery Stops", "JTB Certified"],
     impact_badge: true,
     whatsapp: "18764859759",
-    special_offer: "Free Red Stripe on arrival"
+    special_offer: "Free Red Stripe on arrival",
+    views: 342
   },
   {
     id: 5,
@@ -114,7 +116,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Business Class", "Wifi in Car", "Receipts Available"],
     impact_badge: false,
     whatsapp: "18765551234",
-    special_offer: null
+    special_offer: null,
+    views: 89
   },
   {
     id: 1,
@@ -134,7 +137,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Wifi", "Parking", "Food", "Guide"],
     impact_badge: true,
     whatsapp: "18765550001",
-    special_offer: "10% off groups of 4+"
+    special_offer: "10% off groups of 4+",
+    views: 1567
   },
   {
     id: 2,
@@ -154,7 +158,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Outdoor Seating", "Takeout", "Bar"],
     impact_badge: false,
     whatsapp: "18765550002",
-    special_offer: null
+    special_offer: null,
+    views: 2100
   },
   {
     id: 3,
@@ -174,7 +179,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Gift Shop", "Tour Guide", "Café"],
     impact_badge: true,
     whatsapp: "18765550003",
-    special_offer: null
+    special_offer: null,
+    views: 1890
   },
   {
     id: 6,
@@ -194,7 +200,8 @@ const INITIAL_LISTINGS = [
     amenities: ["Live Music", "Cliff Diving", "Pool", "Bar"],
     impact_badge: false,
     whatsapp: "18765550006",
-    special_offer: null
+    special_offer: null,
+    views: 3200
   },
   {
     id: 7,
@@ -214,8 +221,15 @@ const INITIAL_LISTINGS = [
     amenities: ["Rafting", "Swimming", "Guide"],
     impact_badge: true,
     whatsapp: "18765550007",
-    special_offer: null
+    special_offer: null,
+    views: 750
   }
+];
+
+const INITIAL_REVIEWS = [
+  { id: 1, listingId: 1, user: "Sarah J.", text: "The view was insane! And knowing my money helps the school next door made it even better.", rating: 5, date: "2 days ago" },
+  { id: 2, listingId: 1, user: "Mike T.", text: "Authentic vibes. The owner is super friendly.", rating: 4, date: "1 week ago" },
+  { id: 3, listingId: 0, user: "John D.", text: "Driver was on time and very professional. The beer was cold!", rating: 5, date: "Yesterday" }
 ];
 
 const STAMPS = [
@@ -223,11 +237,6 @@ const STAMPS = [
   { id: 2, name: "Foodie", icon: "🍗", date: "Oct 25", earned: true },
   { id: 3, name: "Explorer", icon: "🗺️", date: null, earned: false },
   { id: 4, name: "Volunteer", icon: "❤️", date: null, earned: false },
-];
-
-const MOCK_REVIEWS = [
-  { id: 1, user: "Sarah J.", text: "The view was insane! And knowing my money helps the school next door made it even better.", rating: 5, date: "2 days ago" },
-  { id: 2, user: "Mike T.", text: "Authentic vibes. The owner is super friendly.", rating: 4, date: "1 week ago" },
 ];
 
 // --- HELPER: CREATE EMOJI ICONS ---
@@ -291,7 +300,7 @@ const SafetyModal = ({ onClose }) => (
     <p className="text-white/60 mb-8 text-center max-w-xs">Quick access to emergency services and official updates.</p>
     
     <div className="w-full max-w-sm space-y-4">
-      {/* NEW: Visit Jamaica Official Alert Link */}
+      {/* Visit Jamaica Official Alert Link */}
       <a 
         href="https://www.visitjamaica.com/travel-alerts/tours-attractions-reopenings/" 
         target="_blank" 
@@ -332,6 +341,136 @@ const SafetyModal = ({ onClose }) => (
     </div>
   </div>
 );
+
+// --- NEW COMPONENT: AR VIEWER (SIMULATED) ---
+const ARViewer = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[6000] bg-black text-white">
+      {/* Simulated Camera Feed */}
+      <div className="absolute inset-0 bg-neutral-800">
+        <img 
+          src="https://images.unsplash.com/photo-1550418290-b8d86e8a8b1c?auto=format&fit=crop&q=80&w=800" 
+          className="w-full h-full object-cover opacity-60"
+          alt="AR View"
+        />
+      </div>
+
+      {/* Overlay UI */}
+      <div className="absolute inset-0 flex flex-col justify-between p-6">
+        <div className="flex justify-between items-start">
+          <button onClick={onClose} className="p-2 bg-black/40 backdrop-blur-md rounded-full text-white border border-white/20">
+            <X size={24} />
+          </button>
+          <div className="px-4 py-2 bg-black/40 backdrop-blur-md rounded-full text-xs font-bold border border-white/20 flex items-center">
+            <Compass size={14} className="mr-2 animate-spin-slow" /> Discover Mode
+          </div>
+        </div>
+
+        {/* Floating Pins */}
+        <div className="absolute top-1/3 left-1/4 animate-bounce">
+          <div className="bg-white text-black px-3 py-2 rounded-xl shadow-xl flex items-center gap-2 transform -translate-x-1/2">
+            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-lg">🍹</div>
+            <div>
+              <div className="font-bold text-xs">Rick's Cafe</div>
+              <div className="text-[10px] text-green-600 font-bold">0.8km</div>
+            </div>
+          </div>
+          <div className="w-0.5 h-8 bg-white mx-auto"></div>
+          <div className="w-3 h-3 bg-white rounded-full mx-auto shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
+        </div>
+
+        <div className="absolute top-1/2 right-10">
+          <div className="bg-white text-black px-3 py-2 rounded-xl shadow-xl flex items-center gap-2 transform translate-x-1/2">
+            <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-lg">🧗</div>
+            <div>
+              <div className="font-bold text-xs">Mystic Mtn</div>
+              <div className="text-[10px] text-green-600 font-bold">2.4km</div>
+            </div>
+          </div>
+          <div className="w-0.5 h-8 bg-white mx-auto"></div>
+          <div className="w-3 h-3 bg-white rounded-full mx-auto shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
+        </div>
+
+        <div className="text-center pb-8">
+          <p className="text-sm font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+            Point camera at landmarks to explore
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- NEW COMPONENT: SOCIAL MAKER (BUSINESS) ---
+const SocialMakerModal = ({ listing, onClose }) => {
+  const [template, setTemplate] = useState('open'); // open, special, event
+  const [customText, setCustomText] = useState(listing.name);
+
+  return (
+    <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-neutral-100 flex justify-between items-center">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layers size={18} className="text-teal-600"/> Social Kit</h3>
+          <button onClick={onClose}><X size={20}/></button>
+        </div>
+        
+        <div className="p-6 bg-slate-100 flex justify-center">
+          {/* PREVIEW CANVAS */}
+          <div className={`w-64 aspect-[4/5] shadow-2xl rounded-lg p-6 flex flex-col items-center justify-center text-center relative overflow-hidden transition-colors duration-500
+            ${template === 'open' ? 'bg-teal-600 text-white' : ''}
+            ${template === 'special' ? 'bg-orange-500 text-white' : ''}
+            ${template === 'event' ? 'bg-indigo-900 text-white' : ''}
+          `}>
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+            
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg text-black">
+                {template === 'open' && '👋'}
+                {template === 'special' && '🔥'}
+                {template === 'event' && '🎉'}
+              </div>
+              <h2 className="text-2xl font-black uppercase mb-2 leading-tight">
+                {template === 'open' && 'We Are Open!'}
+                {template === 'special' && 'Today Only!'}
+                {template === 'event' && 'Live Tonight!'}
+              </h2>
+              <p className="text-sm font-medium opacity-90 mb-6">{customText}</p>
+              <div className="bg-white text-black px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                DiscoverJA Verified
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Choose Template</label>
+            <div className="flex gap-2">
+              <button onClick={() => setTemplate('open')} className={`flex-1 py-2 text-xs font-bold rounded-lg border ${template === 'open' ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-white border-slate-200'}`}>Status</button>
+              <button onClick={() => setTemplate('special')} className={`flex-1 py-2 text-xs font-bold rounded-lg border ${template === 'special' ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-white border-slate-200'}`}>Offer</button>
+              <button onClick={() => setTemplate('event')} className={`flex-1 py-2 text-xs font-bold rounded-lg border ${template === 'event' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-slate-200'}`}>Event</button>
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Custom Text</label>
+            <input 
+              type="text" 
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-500"
+            />
+          </div>
+
+          <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+            <Download size={18} /> Download Image
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- NEW COMPONENT: TRIP PLANNER ---
 const TripPlanner = ({ listings }) => {
@@ -460,7 +599,8 @@ const CreateListingModal = ({ onClose, onSave }) => {
       impact_score: 100,
       impact_badge: true,
       scout_verified: "Pending",
-      region: "montegobay" // Default for now
+      region: "montegobay", // Default for now
+      views: 0
     };
     onSave(newListing);
   };
@@ -586,11 +726,13 @@ const EditListingModal = ({ listing, onClose, onSave }) => {
   );
 };
 
-const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
+const DetailView = ({ item, reviews, onBack, isSaved, onToggleSave, onCheckIn, onAddReview }) => {
   const [activeTab, setActiveTab] = useState('about');
   const [booked, setBooked] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
 
   const handleBooking = () => {
     setBooked(true);
@@ -625,6 +767,13 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
       setCheckedIn(true);
       onCheckIn(item.id);
     }
+  };
+
+  const submitReview = () => {
+    if (!reviewText.trim()) return;
+    onAddReview(item.id, reviewRating, reviewText);
+    setReviewText("");
+    alert("Review Submitted! Thank you for sharing.");
   };
 
   // Generate next 5 days for date picker
@@ -700,7 +849,7 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
             onClick={() => setActiveTab('reviews')}
             className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'reviews' ? 'text-teal-600 border-teal-600' : 'text-neutral-400 border-transparent'}`}
           >
-            Reviews ({item.reviews})
+            Reviews ({reviews.length})
           </button>
         </div>
 
@@ -757,7 +906,30 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in duration-300">
-            {MOCK_REVIEWS.map(review => (
+            {/* WRITE REVIEW */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <h4 className="font-bold text-sm mb-2">Write a Review</h4>
+              <div className="flex mb-2 gap-1">
+                {[1,2,3,4,5].map(star => (
+                  <button key={star} onClick={() => setReviewRating(star)}>
+                    <Star size={20} className={star <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-slate-300"} />
+                  </button>
+                ))}
+              </div>
+              <textarea 
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Share your experience..." 
+                className="w-full p-2 text-sm border rounded-lg mb-2 bg-white" 
+                rows={2}
+              />
+              <button onClick={submitReview} className="bg-teal-600 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2">
+                <Send size={12} /> Post Review
+              </button>
+            </div>
+
+            {/* REVIEW LIST */}
+            {reviews.map(review => (
               <div key={review.id} className="bg-neutral-50 p-4 rounded-xl">
                  <div className="flex justify-between items-start mb-2">
                     <span className="font-bold text-sm">{review.user}</span>
@@ -771,7 +943,6 @@ const DetailView = ({ item, onBack, isSaved, onToggleSave, onCheckIn }) => {
                  <p className="text-sm text-neutral-600">"{review.text}"</p>
               </div>
             ))}
-            <button className="w-full py-3 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-600">Write a Review</button>
           </div>
         )}
       </div>
@@ -860,6 +1031,7 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mode, setMode] = useState('traveler'); // 'traveler' or 'business'
   const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [showAR, setShowAR] = useState(false);
   
   // NAVIGATION STATE
   const [activeTab, setActiveTab] = useState('discover');
@@ -868,6 +1040,11 @@ const App = () => {
   const [listings, setListings] = useState(() => {
     const saved = localStorage.getItem('discoverja_listings');
     return saved ? JSON.parse(saved) : INITIAL_LISTINGS;
+  });
+
+  const [reviews, setReviews] = useState(() => {
+    const saved = localStorage.getItem('discoverja_reviews');
+    return saved ? JSON.parse(saved) : INITIAL_REVIEWS;
   });
 
   const [savedIds, setSavedIds] = useState(() => {
@@ -882,6 +1059,7 @@ const App = () => {
 
   // PERSISTENCE EFFECTS
   useEffect(() => { localStorage.setItem('discoverja_listings', JSON.stringify(listings)); }, [listings]);
+  useEffect(() => { localStorage.setItem('discoverja_reviews', JSON.stringify(reviews)); }, [reviews]);
   useEffect(() => { localStorage.setItem('discoverja_saved', JSON.stringify(savedIds)); }, [savedIds]);
   useEffect(() => { localStorage.setItem('discoverja_points', points.toString()); }, [points]);
 
@@ -897,6 +1075,7 @@ const App = () => {
   const [showQR, setShowQR] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showSocialModal, setShowSocialModal] = useState(false);
 
   // --- HANDLERS ---
 
@@ -932,6 +1111,32 @@ const App = () => {
   const handleCheckIn = (id) => {
     setPoints(points + 10);
     alert("Check-in confirmed! You earned 10 Points.");
+  };
+
+  // Add Review
+  const handleAddReview = (listingId, rating, text) => {
+    const newReview = {
+      id: Date.now(),
+      listingId,
+      user: "Traveler", // Simulating logged in user
+      text,
+      rating,
+      date: "Just now"
+    };
+    setReviews([newReview, ...reviews]);
+  };
+
+  // View Listing (Analytics)
+  const handleViewListing = (item) => {
+    setSelectedListing(item);
+    // Increment view count for the listing
+    const updatedListings = listings.map(l => {
+      if (l.id === item.id) {
+        return { ...l, views: (l.views || 0) + 1 };
+      }
+      return l;
+    });
+    setListings(updatedListings);
   };
 
   // Filter Logic
@@ -973,7 +1178,8 @@ const App = () => {
 
   // 2. BUSINESS OWNER VIEW
   if (mode === 'business') {
-    const myListing = listings[0]; 
+    const myListing = listings[0]; // Currently managing P&T MoBay
+    const myReviews = reviews.filter(r => r.listingId === myListing.id);
 
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 animate-in fade-in duration-300">
@@ -1014,6 +1220,19 @@ const App = () => {
              </div>
           </div>
 
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-100 p-4 rounded-2xl">
+              <span className="text-xs text-slate-500 font-medium uppercase">Profile Views</span>
+              <div className="text-2xl font-bold mt-1 text-slate-800">{myListing.views || 0}</div>
+              <div className="text-xs text-green-600 flex items-center mt-1"><TrendingUp size={12} className="mr-1"/> Live</div>
+            </div>
+            <div className="bg-slate-100 p-4 rounded-2xl">
+              <span className="text-xs text-slate-500 font-medium uppercase">Total Reviews</span>
+              <div className="text-2xl font-bold mt-1 text-slate-800">{myReviews.length}</div>
+            </div>
+          </div>
+
           <div>
             <h3 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Tools</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -1025,6 +1244,23 @@ const App = () => {
                 <span className="text-sm font-bold">Show QR Code</span>
               </button>
               <button 
+                onClick={() => setShowEditModal(true)}
+                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:shadow-md transition-all active:scale-95"
+              >
+                <Edit3 className="text-blue-500" size={28} />
+                <span className="text-sm font-bold">Edit Listing</span>
+              </button>
+              
+              {/* NEW SOCIAL MAKER BUTTON */}
+              <button 
+                onClick={() => setShowSocialModal(true)} 
+                className="p-4 bg-indigo-600 text-white rounded-2xl border border-indigo-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
+              >
+                <Layers className="text-white" size={28} />
+                <span className="text-sm font-bold">Social Maker</span>
+              </button>
+
+              <button 
                 onClick={() => setShowCreateModal(true)} 
                 className="p-4 bg-orange-600 text-white rounded-2xl border border-orange-700 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-orange-700 hover:shadow-md transition-all active:scale-95"
               >
@@ -1032,21 +1268,6 @@ const App = () => {
                 <span className="text-sm font-bold">New Listing</span>
               </button>
             </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-             <div className="flex justify-between items-start mb-3">
-               <h3 className="font-bold text-slate-800 flex items-center"><Bell size={16} className="mr-2 text-orange-500"/> Today's Flash Offer</h3>
-               <button 
-                 onClick={() => setShowEditModal(true)}
-                 className="text-xs text-teal-600 font-bold underline"
-               >
-                 Edit
-               </button>
-             </div>
-             <div className="bg-slate-50 rounded-xl p-3 text-sm font-medium text-slate-700">
-               {myListing.special_offer || "No active offer. Click Edit to add one!"}
-             </div>
           </div>
 
           <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
@@ -1087,6 +1308,8 @@ const App = () => {
           </div>
         )}
 
+        {showSocialModal && <SocialMakerModal listing={myListing} onClose={() => setShowSocialModal(false)} />}
+
         {showEditModal && (
           <EditListingModal 
             listing={myListing} 
@@ -1111,10 +1334,12 @@ const App = () => {
     return (
       <DetailView 
         item={selectedListing} 
+        reviews={reviews.filter(r => r.listingId === selectedListing.id)}
         onBack={() => setSelectedListing(null)} 
         isSaved={savedIds.includes(selectedListing.id)}
         onToggleSave={toggleSave}
         onCheckIn={handleCheckIn}
+        onAddReview={handleAddReview}
       />
     );
   }
@@ -1131,6 +1356,14 @@ const App = () => {
         
         {/* ALERT BUTTONS */}
         <div className="flex gap-2">
+          {/* AR LENS BUTTON */}
+          <button 
+            onClick={() => setShowAR(true)}
+            className="bg-indigo-600 p-2 rounded-full text-white hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <Camera size={18} />
+          </button>
+
           <button className="bg-slate-100 p-2 rounded-full text-slate-500 hover:text-black">
             <Bell size={18} />
           </button>
@@ -1236,7 +1469,7 @@ const App = () => {
                   {filteredListings.map(item => (
                     <div 
                       key={item.id} 
-                      onClick={() => setSelectedListing(item)}
+                      onClick={() => handleViewListing(item)}
                       className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-2 duration-300 relative"
                     >
                       <div className="h-48 bg-neutral-200 relative">
@@ -1317,7 +1550,7 @@ const App = () => {
                          <div className="p-1 text-center">
                             <h3 className="font-bold text-sm mb-1">{item.name}</h3>
                             <button 
-                              onClick={() => setSelectedListing(item)}
+                              onClick={() => handleViewListing(item)}
                               className="text-xs bg-teal-600 text-white px-2 py-1 rounded"
                             >
                               View
@@ -1436,7 +1669,7 @@ const App = () => {
                           <button className="text-red-500 p-2 bg-red-50 rounded-lg" onClick={() => toggleSave(item.id)}>
                             <Heart size={16} className="fill-current"/>
                           </button>
-                          <button className="text-teal-600 font-bold text-xs p-2 bg-teal-50 rounded-lg" onClick={() => setSelectedListing(item)}>View</button>
+                          <button className="text-teal-600 font-bold text-xs p-2 bg-teal-50 rounded-lg" onClick={() => handleViewListing(item)}>View</button>
                         </div>
                      </div>
                    ))}
@@ -1467,8 +1700,9 @@ const App = () => {
 
       </main>
 
-      {/* GLOBAL SAFETY MODAL */}
+      {/* GLOBAL MODALS */}
       {showSafetyModal && <SafetyModal onClose={() => setShowSafetyModal(false)} />}
+      {showAR && <ARViewer onClose={() => setShowAR(false)} />}
 
       <nav className="fixed bottom-0 w-full bg-white border-t border-neutral-200 pb-6 pt-2 px-6 z-[1000]">
         <div className="flex justify-between items-center max-w-sm mx-auto">
