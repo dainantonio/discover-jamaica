@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, Camera, Calendar, User, Search, Menu, X, Star, Heart, 
   Share2, Compass, TrendingUp, Image as ImageIcon, Check, Smartphone, Award,
@@ -44,7 +44,7 @@ const SAFETY_ALERTS = [
 ];
 
 const STORIES = [
-  { id: 1, user: "Ricks Cafe", image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=200", text: "Sunset Live! 🎸" },
+  { id: 1, user: "Ricks Cafe", image: "https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?auto=format&fit=crop&q=80&w=200", text: "Sunset Live! 🎸" },
   { id: 2, user: "Blue Mtn", image: "https://images.unsplash.com/photo-1517142089942-ba376ce32a2e?auto=format&fit=crop&q=80&w=200", text: "Harvest Day ☕" },
   { id: 3, user: "Boston Jerk", image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=200", text: "Fresh Off Grill 🔥" },
   { id: 4, user: "Bamboo Raft", image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=200", text: "River Clear 🌊" },
@@ -64,10 +64,11 @@ const INITIAL_LISTINGS = [
     region: 'southcoast',
     rating: 5.0,
     reviews: 18,
-    price: 40, // Numeric for conversion
+    price: 40,
     priceLabel: "$40", 
     location: "Treasure Beach, St. Elizabeth",
     coordinates: [17.887, -77.771],
+    // Authentic weaving image
     image: "https://images.unsplash.com/photo-1605218427360-36390f8584af?auto=format&fit=crop&q=80&w=800",
     description: "Learn to weave traditional baskets with palm leaves under the mango tree.",
     full_bio: "I've been weaving since I was a little girl. Come sit on my porch, drink some lemongrass tea, and learn the art of Jamaican basketry. You take home whatever you make! This class supports the local women's weaving circle.",
@@ -90,7 +91,8 @@ const INITIAL_LISTINGS = [
     priceLabel: "$30+",
     location: "Sangster Intl Airport (MBJ)",
     coordinates: [18.476, -77.92], 
-    image: "https://images.unsplash.com/photo-1548625361-e88c7e928d36?q=80&w=800&auto=format&fit=crop", 
+    // Transport van image
+    image: "https://images.unsplash.com/photo-1549194388-f61905e73c2c?q=80&w=800&auto=format&fit=crop", 
     description: "Private, AC transfers from MBJ to any hotel in Montego Bay or Negril.",
     full_bio: "Start your vacation the moment you land. No waiting on big buses. We track your flight and meet you with a Red Stripe and a smile. JTB Certified driver.",
     impact_score: 98,
@@ -112,6 +114,7 @@ const INITIAL_LISTINGS = [
     priceLabel: "$25+",
     location: "Norman Manley Intl (KIN)",
     coordinates: [17.936, -76.779],
+    // City driving image
     image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
     description: "Reliable airport pickup and city drops for business or leisure.",
     full_bio: "Expert navigation of Kingston traffic. Safe, reliable, and always on time for your flight.",
@@ -130,11 +133,12 @@ const INITIAL_LISTINGS = [
     region: 'ochorios',
     rating: 4.8,
     reviews: 1240,
-    price: 0, // 0 indicates variable pricing
+    price: 0, 
     priceLabel: "$$",
     location: "Ocho Rios, St. Ann",
     coordinates: [18.405, -77.103],
-    image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
+    // Rainforest canopy
+    image: "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?auto=format&fit=crop&q=80&w=800",
     description: "Zipline through the canopy and bobsled down the mountain.",
     full_bio: "Experience the rainforest from 700 feet up. Following Hurricane Melissa, we have replanted 500 trees and restored the bobsled track to be faster than ever.",
     impact_score: 95,
@@ -156,7 +160,8 @@ const INITIAL_LISTINGS = [
     priceLabel: "$",
     location: "Montego Bay, St. James",
     coordinates: [18.504, -77.896],
-    image: "https://images.unsplash.com/photo-1596450518334-111b7b4a899c?auto=format&fit=crop&q=80&w=800",
+    // BBQ/Jerk image
+    image: "https://images.unsplash.com/photo-1529193591184-b1d580690dd0?auto=format&fit=crop&q=80&w=800",
     description: "The authentic jerk experience. Wood fire smoked chicken and pork.",
     full_bio: "We are the heart of MoBay. Our pits are hot and our roof is fixed. We source all our peppers from local farmers affected by the storm.",
     impact_score: 88,
@@ -178,7 +183,8 @@ const INITIAL_LISTINGS = [
     priceLabel: "$$$",
     location: "Kingston 6",
     coordinates: [18.019, -76.783],
-    image: "https://images.unsplash.com/photo-1550418290-b8d86e8a8b1c?auto=format&fit=crop&q=80&w=800",
+    // Vibrant wall art
+    image: "https://images.unsplash.com/photo-1542384557-0824d90731ee?auto=format&fit=crop&q=80&w=800",
     description: "The former home and studio of the reggae legend.",
     full_bio: "Walk through the life of a legend. We are fully open and accepting visitors. Proceeds help the Tuff Gong Foundation repair local schools.",
     impact_score: 98,
@@ -200,7 +206,8 @@ const INITIAL_LISTINGS = [
     priceLabel: "$$",
     location: "West End, Negril",
     coordinates: [18.250, -78.366],
-    image: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800",
+    // Cliff jumping
+    image: "https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?auto=format&fit=crop&q=80&w=800",
     description: "World famous sunset bar and cliff diving.",
     full_bio: "The best sunset view in the world. Come for the diving, stay for the vibes. We are fully operational after the storm.",
     impact_score: 85,
@@ -222,7 +229,8 @@ const INITIAL_LISTINGS = [
     priceLabel: "$$",
     location: "Port Antonio, Portland",
     coordinates: [18.170, -76.388],
-    image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
+    // Blue water rafting
+    image: "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&q=80&w=800",
     description: "Swim in the mix of fresh and saltwater in the mystical lagoon.",
     full_bio: "A natural wonder. We offer guided raft tours and snorkeling. The surrounding jungle is lush and recovering beautifully.",
     impact_score: 96,
